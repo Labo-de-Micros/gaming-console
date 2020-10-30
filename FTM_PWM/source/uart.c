@@ -22,13 +22,13 @@ void PCR_config(uint32_t port_name, uint32_t pin, uint32_t mux_value);
 static PORT_Type* portPtrs[] = PORT_BASE_PTRS;
 
 
-void PCR_config(uint32_t port_name, uint32_t pin, uint32_t mux_value)
+void PCR_config(uint32_t port_name, uint32_t pin2use, uint32_t mux_value)
 {
-	uint132_t pin = PORTNUM2PIN(port_name,pin_value);
+	uint32_t pin = PORTNUM2PIN(port_name,pin2use);
 	PORT_Type *port = portPtrs[PIN2PORT(pin)];
 	uint32_t num = PIN2NUM(pin);
 	port->PCR[num] =0x00; // fuerzo a valer 0 el PCR
-	port->PCR[num] |= PORT_PCR_MUX(value); // activo el modo en el que quiero utilizar ese pin
+	port->PCR[num] |= PORT_PCR_MUX(mux_value); // activo el modo en el que quiero utilizar ese pin
 	port->PCR[num] &= ~PORT_PCR_IRQC_MASK;
 	port->PCR[num] |= PORT_PCR_IRQC(0b0000);
 }
@@ -79,9 +79,12 @@ void uart_init (UART_type_t id, uart_cfg_t config)
 	UART0->BDL=UART_BDL_SBR(sbr);
 
 	//termino el seteo del baudrate
-	//habilito para que pueda enviar y transmitir
 
+	//configuro C1 para el largo de la palabra, paridad, stop_bit
+	UART0->C1=0x01;	//length 8, no parity, 1 stop_bit
+	//habilito para que pueda enviar y transmitir
 	UART0->C2=UART_C2_TE_MASK|UART_C2_RE_MASK;
+	UART0->S2 &= ~(0x06); // MSBF = 0, BRK13 = 0
 
 }
 
@@ -89,7 +92,7 @@ void uart_init (UART_type_t id, uart_cfg_t config)
 void UART_send_data(unsigned char tx_data )
 {
 	uint8_t s1 = UART0->S1;
-	while(((s1) & UART_S1_TDRE_MASK)) == 0);
+	//while(((s1) & UART_S1_TDRE_MASK)) == 0);
 
 }
 

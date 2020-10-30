@@ -17,7 +17,7 @@ C_DEPS += \
 CMSIS/%.o: ../CMSIS/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: MCU C Compiler'
-	arm-none-eabi-gcc -DCR_INTEGER_PRINTF -DSDK_DEBUGCONSOLE=0 -D__MCUXPRESSO -D__USE_CMSIS -DDEBUG -DCPU_MK64FN1M0VDC12 -DCPU_MK64FN1M0VDC12_cm4 -D__REDLIB__ -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\FTM_PWM\source" -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\FTM_PWM" -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\FTM_PWM\startup" -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\FTM_PWM\CMSIS" -O0 -fno-common -g3 -Wall -c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections -Wa,-adhlns="$@.lst" -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -D__REDLIB__ -specs=redlib.specs -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	arm-none-eabi-gcc -DCR_INTEGER_PRINTF -DSDK_DEBUGCONSOLE=0 -D__MCUXPRESSO -D__USE_CMSIS -DDEBUG -DCPU_MK64FN1M0VDC12 -DCPU_MK64FN1M0VDC12_cm4 -D__REDLIB__ -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\Tp2\TP2\FTM_PWM\source" -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\Tp2\TP2\FTM_PWM" -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\Tp2\TP2\FTM_PWM\startup" -I"C:\Users\marth\Documents\ITBA\Labo de micros\Tps\Tp2\TP2\FTM_PWM\CMSIS" -O0 -fno-common -g3 -Wall -c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections -Wa,-adhlns="$@.lst" -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -D__REDLIB__ -specs=redlib.specs -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

@@ -32,6 +32,9 @@
 
 typedef struct {
   uint32_t baudrate;
+  uint8_t length;
+  uint8_t parity_bit;
+  uint8_t stop_bit;
 } uart_cfg_t;
 
 typedef enum{ UART_0, UART_1, UART_2, UART_3, UART_4, UART_5} UART_type_t;
