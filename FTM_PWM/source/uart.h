@@ -24,7 +24,7 @@
 #define UART0_TX_PIN 17 //PTB17
 #define UART0_RX_PIN 16 //PTB16
 
-
+#define __CORE_CLOCK__ 	100000000U
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
