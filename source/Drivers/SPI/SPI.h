@@ -15,8 +15,8 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#include<stdint.h>
-#include<stdbool.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -36,13 +36,13 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void SPI_init (void);
+void SPI_init(void);
 /*****************************************************************
  * @brief Function to initialize the SPI comunication protocol
  *          driver
  ****************************************************************/
 
-uint8_t SPI_sendReceive(char * data2send, char size,char * recivedData);
+uint8_t SPI_sendReceive(uint8_t * data2send, uint8_t size, uint8_t * recivedData);
 /*****************************************************************
  * @brief Function to send data over the SPI protocol. This function
  *          is a blocking one

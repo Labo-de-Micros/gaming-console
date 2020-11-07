@@ -28,13 +28,6 @@
 #define SPI_DRIVER_BR       5
 #define SPI_DRIVER_PBR      1
 
-// PASARLO A BOARD.H
-#define SPI_PIN_PCS0    PORTNUM2PIN(PB,22) 	// PTB22
-#define SPI_PIN_SCK	    PORTNUM2PIN(PB,22) 	// PTB22
-#define SPI_PIN_SIN		PORTNUM2PIN(PB,22) 	// PTB22
-#define SPI_PIN_SOUT    PORTNUM2PIN(PB,22) 	// PTB22
-#define _DEBUG_SPI_
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
@@ -94,7 +87,7 @@ static void stopTrasmissionReception(void);
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void SPI_driver_init (void){
+void SPI_init(void){
 /*****************************************************************
  * @brief Function to initialize the SPI comunication protocol
  *          driver
@@ -110,7 +103,7 @@ void SPI_driver_init (void){
     return;
 }
 
-uint8_t SPI_driver_sendReceive(uint8_t * data2end, uint8_t size,uint8_t * recivedData){
+uint8_t SPI_sendReceive(uint8_t * data2end, uint8_t size,uint8_t * recivedData){
 /*****************************************************************
  * @brief Function to send data over the SPI protocol. This function
  *          is a blocking one
@@ -162,7 +155,7 @@ uint8_t SPI_driver_sendReceive(uint8_t * data2end, uint8_t size,uint8_t * recive
 	return dataRecived;
 }
 
-bool SPI_driver_dataSended(void){
+bool SPI_dataSended(void){
 /*****************************************************************
  * @brief Function to check if the data was sended.
  * @returns true if the data was sended, false otherwise.
@@ -176,7 +169,7 @@ bool SPI_driver_dataSended(void){
 	return !trasmiting;
 }
 
-bool SPI_driver_availableDataRecived(void){
+bool SPI_availableDataRecived(void){
 /*****************************************************************
  * @brief Function to check if data was received.
  * @returns true if data was received, false otherwise.
@@ -184,7 +177,7 @@ bool SPI_driver_availableDataRecived(void){
 	return true;	//Por ahora siempre devuelve true! Checkear esto.
 }
 
-uint8_t SPI_driver_getData(uint8_t * dataRecived){
+uint8_t SPI_getData(uint8_t * dataRecived){
 /*****************************************************************
  * @brief Function to get the data received.
  * @param dataReceived pointer to an array for loading the data.

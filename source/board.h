@@ -1,35 +1,38 @@
-/***************************************************************************//**
-  @file     board.h
-  @brief    Board management
-  @author   Nicolás Magliola
- ******************************************************************************/
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//	@file		board.h   										//
+//	@brief		Board management.								//
+//	@author		Grupo	4										//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 #ifndef _BOARD_H_
 #define _BOARD_H_
 
-/*******************************************************************************
- * INCLUDE HEADER FILES
- ******************************************************************************/
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//							Headers								//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
-#include "gpio.h"
+#include "./Drivers/GPIO/gpio.h"
 
-
-/*******************************************************************************
- * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
- ******************************************************************************/
-
-/***** BOARD defines **********************************************************/
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 // On Board User LEDs
-#define PIN_LED_RED     PORTNUM2PIN(PB,22) 	// PTB22
-#define PIN_LED_GREEN   PORTNUM2PIN(PB,26)	// PTB26
-#define PIN_LED_BLUE    PORTNUM2PIN(PB,21) 	// PTB21
+#define PIN_LED_RED     PORTNUM2PIN(PB,22) 		// PTB22
+#define PIN_LED_GREEN   PORTNUM2PIN(PB,26)		// PTB26
+#define PIN_LED_BLUE    PORTNUM2PIN(PB,21) 		// PTB21
 
 
 
-#define INTERRUPT_PIN	  PORTNUM2PIN(PC,6)		//PTC5
-#define DEBUG_PIN       PORTNUM2PIN(PE,25)	//PTE25
-#define SIGNAL_PIN		  PORTNUM2PIN(PC,12)	//PTC12
+#define INTERRUPT_PIN	PORTNUM2PIN(PC,6)		//PTC5
+#define DEBUG_PIN       PORTNUM2PIN(PE,25)		//PTE25
+#define SIGNAL_PIN		PORTNUM2PIN(PC,12)		//PTC12
 
 #define LED_ACTIVE			LOW
 
@@ -37,7 +40,12 @@
 #define PIN_SW2         PORTNUM2PIN(PC,6)		// PTC6
 #define PIN_SW3         PORTNUM2PIN(PA,4)		// PTA4
 
-/*******************************************************************************
- ******************************************************************************/
+// SPI
+#define _DEBUG_SPI_
+#define SPI_PIN_SCK	    PORTNUM2PIN(PD,1) 		// PTD1
+#define SPI_PIN_SOUT    PORTNUM2PIN(PD,2) 		// PTD2
+#define SPI_PIN_SIN		PORTNUM2PIN(PD,3) 		// PTD3
+#define SPI_PIN_PCS0    PORTNUM2PIN(PC,4) 		// PTC4
+
 
 #endif // _BOARD_H_

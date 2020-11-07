@@ -7,7 +7,7 @@
 
 
 #include "FTM.h"
-#include "gpio.h"
+#include "../GPIO/gpio.h"
 
 
 
