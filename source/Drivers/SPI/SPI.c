@@ -23,7 +23,7 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define SPI_DRIVER_ALT		2                       // Alternativa
+#define SPI_DRIVER_ALT		2                       // Alternativa SPI K64
 #define SPI_DRIVER_INPUT	1
 #define SPI_DRIVER_BR       5
 #define SPI_DRIVER_PBR      1
@@ -33,6 +33,7 @@
 #define SPI_PIN_SCK	    PORTNUM2PIN(PB,22) 	// PTB22
 #define SPI_PIN_SIN		PORTNUM2PIN(PB,22) 	// PTB22
 #define SPI_PIN_SOUT    PORTNUM2PIN(PB,22) 	// PTB22
+#define _DEBUG_SPI_
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -53,8 +54,8 @@ typedef struct{
 
 static bool trasmiting=false;
 static SPI_Type *SPI_driver_SPI[] = {SPI0, SPI1, SPI2};
-static PORT_Type * ports[] = PORT_BASE_PTRS;
-static uint32_t sim_port[] = {SIM_SCGC5_PORTA_MASK, SIM_SCGC5_PORTB_MASK, SIM_SCGC5_PORTC_MASK, SIM_SCGC5_PORTD_MASK, SIM_SCGC5_PORTE_MASK};
+// static PORT_Type * ports[] = PORT_BASE_PTRS;
+// static uint32_t sim_port[] = {SIM_SCGC5_PORTA_MASK, SIM_SCGC5_PORTB_MASK, SIM_SCGC5_PORTC_MASK, SIM_SCGC5_PORTD_MASK, SIM_SCGC5_PORTE_MASK};
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -98,7 +99,7 @@ void SPI_driver_init (void){
  * @brief Function to initialize the SPI comunication protocol
  *          driver
  ****************************************************************/
-	static ya_init = false;
+	static bool ya_init = false;
 	if(!ya_init){
 		port_init();						// Inicializo los puertos
 		SIM->SCGC6 |= SIM_SCGC6_SPI0(1); 	// Habilito el Clock Gating
@@ -253,10 +254,10 @@ static void port_setup(spi_pin_t spi_pin){
 
 	if(port_ptr != NULL){
 		//Clear and set MUX field
-		port_ptr->PCR[pin_info.pin] &= ~PORT_PCR_MUX_MASK;
-		port_ptr->PCR[pin_info.pin] |= PORT_PCR_MUX(SPI_DRIVER_ALT);
+		port_ptr->PCR[spi_pin.pin] &= ~PORT_PCR_MUX_MASK;
+		port_ptr->PCR[spi_pin.pin] |= PORT_PCR_MUX(SPI_DRIVER_ALT);
 		//Lock PIN.
-		port_ptr->PCR[pin_info.pin] |= PORT_PCR_LK(1);
+		port_ptr->PCR[spi_pin.pin] |= PORT_PCR_LK(1);
 		//TODO: Veriicar que la configuracion de Lock sea compatible.
 	}
 	return;
@@ -267,10 +268,20 @@ static void mcr_setup(void){
  * @brief Function to configure the MCR register.
  ****************************************************************/
 	//DCONF. SPI
-	SPI0->MCR &= ~SPI_MCR_DCONF(0b11);
+	SPI0->MCR &= ~SPI_MCR_DCONF(0b11); 	//Pongo el DCONF en 00 para configurar el SPI
     //MSTR. Master Mode
-    SPI0->MCR |= SPI_MCR_MSTR(1);
-    //PCSIS. PCSx active LOW.
+    SPI0->MCR |= SPI_MCR_MSTR(1);		//Lo configuro en modo Master
+	//CONT_SCKE. Continuous SCK enabled.
+    SPI0->MCR |= SPI_MCR_CONT_SCKE(1);	//Activo el Clock Continuo
+
+#ifdef _DEBUG_SPI_
+	//FRZ. Halt serial transfers in debug mode
+	SPI0->MCR |= SPI_MCR_FRZ(1);
+#endif	// _DEBUG_SPI_
+
+	//MTFE Disbaled
+	SPI0->MCR |= SPI_MCR_MTFE(0);
+	//PCSIS. PCSx active LOW.
     SPI0->MCR |= SPI_MCR_PCSIS(1);
     //MDIS. Disable module clock
     SPI0->MCR &= ~SPI_MCR_MDIS(1);
@@ -278,8 +289,6 @@ static void mcr_setup(void){
     SPI0->MCR |= SPI_MCR_CLR_RXF(1);
     //CLR_TXF. Flush TX FIFO & clear TX Counter
     SPI0->MCR |= SPI_MCR_CLR_TXF(1);
-    //CONT_SCKE. Continuous SCK enabled.
-    SPI0->MCR &= ~SPI_MCR_CONT_SCKE(1);
 	return;
 }
 
@@ -312,7 +321,7 @@ static void ctar_setup(void){
 }
 
 static void startTrasmissionReception(void){
-	SPI_driver_SPI[0]->MCR =(SPI_driver_SPI[0]->MCR & (~SPI_MCR_HALT_MASK))| SPI_MCR_HALT(0);
+	SPI_driver_SPI[0]->MCR =(SPI_driver_SPI[0]->MCR & (~SPI_MCR_HALT_MASK)) | SPI_MCR_HALT(0);
     return;
 }
 
