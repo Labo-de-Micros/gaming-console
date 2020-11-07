@@ -86,7 +86,7 @@ static void finish_com (I2C_FAULT fault);
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-static void finish_com (I2C_FAULT fault);
+static void finish_com(I2C_FAULT fault);
 
 void I2C0_IRQHandler(void){
 	I2C_CLEAR_IRQ_FLAG;
@@ -179,7 +179,6 @@ void I2C0_IRQHandler(void){
 //					FUNCTION DEFINITIONS						//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-
 
 void I2C_init(I2C_ChannelType channel){
 /*****************************************************************
@@ -280,7 +279,7 @@ void I2C_write_msg(I2C_COM_CONTROL * i2c_comm){
 	return;
 }
 
-I2C_FAULT i2cWriteMsgBlocking (uint8_t * msg, uint8_t data_size,	uint8_t register_address, uint8_t slave_address ){
+I2C_FAULT i2cWriteMsgBlocking(uint8_t * msg, uint8_t data_size,	uint8_t register_address, uint8_t slave_address ){
 	NVIC_DisableIRQ(i2c_irqs[ch]);
 	I2C_FAULT fault = I2C_NO_FAULT;
 	unsigned timeout = TIMEOUT;	// Use timeout for blocking communications
@@ -339,7 +338,7 @@ I2C_FAULT i2cWriteMsgBlocking (uint8_t * msg, uint8_t data_size,	uint8_t registe
 	return I2C_NO_FAULT;
 }
 
-I2C_FAULT i2cReadMsgBlocking (uint8_t * buffer, uint8_t data_size,	uint8_t register_address, uint8_t slave_address ){
+I2C_FAULT i2cReadMsgBlocking(uint8_t * buffer, uint8_t data_size,	uint8_t register_address, uint8_t slave_address ){
 	NVIC_DisableIRQ(i2c_irqs[ch]);
 	I2C_FAULT fault = I2C_NO_FAULT;
 	unsigned timeout = TIMEOUT;	// Use timeout for blocking communications

@@ -67,7 +67,6 @@ void I2C_read_msg(I2C_COM_CONTROL * i2c_comm);
  * @param i2c_comm: Pointer to communication parameters.
  ****************************************************************/
 
-
 void I2C_write_msg(I2C_COM_CONTROL * i2c_comm);
 /*****************************************************************
  * @brief Function to write a message from the I2C module
