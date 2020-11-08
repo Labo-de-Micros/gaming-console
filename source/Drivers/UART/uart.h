@@ -94,14 +94,20 @@ uint8_t uartWriteMsg(uint8_t id, const char* msg, uint8_t cant);
 uint8_t uartIsTxMsgComplete(uint8_t id);
 
 void UART_send_data(unsigned char tx_data );
+//envia una palabra por uart
+//es bloqueante
 
 unsigned char UART_Recieve_Data(void);
+//funcion que se queda escuchando hasta que le llega un mensaje a traves de aurt
 
 
- void upload_word(char * word, uint16_t can);
+void upload_word(char * word, uint16_t can);
+//copia el mensaje al buffer y activa las interrupciones para mandarlo
+
 
 
 void download_word(void);
+// se fija si llego un mensaje y lo copia a un arreglo externo al buffer
 /*******************************************************************************
  ******************************************************************************/
 

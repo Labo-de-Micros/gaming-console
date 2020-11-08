@@ -8,7 +8,7 @@
 
 #include "MK64F12.h"
 #include "uart.h"
-#include "../GPIO/gpio.h"
+#include "gpio.h"
 //#include "board.h"
 #include <stdbool.h>
 
@@ -22,17 +22,14 @@ static uint8_t rx_data;
 uint8_t buffer_send[BUFFER_SIZE];
 uint8_t buffer_recived[BUFFER_SIZE];
 
-uint16_t recibido=0;
-uint16_t por_recibir=0;
+static uint16_t first_recived=0; 		//puntero al principio del buffer de mensajes recibidos
+static uint16_t last_recived=0;			//puntero al final del buffer de mensajes recibidos
 
-uint16_t enviado=0;
-uint16_t por_enviar=0;
+static	uint16_t first_2_send=0;		//puntero al principio del buffer para enviar
+static 	uint16_t last_2_send=0;			//puntero a la cola del buffer para enviar
 
-bool rx_flag=false;
+static bool rx_flag=false;
 char word_down[BUFFER_SIZE+20];
-
-char test1[]="llego el wachin";
-
 
 //PCR congfig
 
@@ -145,17 +142,17 @@ __ISR__ UART0_RX_TX_IRQHandler (void)
 	if( s1 & UART_S1_RDRF_MASK)		//cuando recibo transmisiones que son de mas de una palabra
 	{
 		rx_data=UART0->D;
-		buffer_recived[por_recibir]=rx_data;
-		por_recibir = (por_recibir + 1) % BUFFER_SIZE;
+		buffer_recived[last_recived]=rx_data;
+		last_recived = (last_recived + 1) % BUFFER_SIZE;
 		rx_flag=true;
 
 
 	}
 	else if( s1 & UART_S1_TDRE_MASK)
 	{
-		UART0->D=buffer_send[enviado];
-		enviado = (enviado + 1) % BUFFER_SIZE;
-		if(enviado == por_enviar)
+		UART0->D=buffer_send[first_2_send];
+		first_2_send = (first_2_send + 1) % BUFFER_SIZE;
+		if(first_2_send == last_2_send)
 		{
 			UART0->C2 &= ~UART_C2_TIE_MASK;			//deshabilito la interrupcion asi dejo de enviar
 		}
@@ -171,11 +168,11 @@ void upload_word(char * word, uint16_t can){
 
 	uint8_t temp=0;
 
-	while( ((word[temp]) != TERMINADOR) || (temp < can)){
+	while( ((word[temp]) != TERMINADOR) && (temp < can)){
 
-		buffer_send[por_enviar]= word[temp];
+		buffer_send[last_2_send]= word[temp];
 		temp++;
-		por_enviar= (por_enviar + 1) % BUFFER_SIZE;
+		last_2_send= (last_2_send + 1) % BUFFER_SIZE;
 	}
 	UART0->C2 |= UART_C2_TIE_MASK;
 
@@ -187,10 +184,10 @@ void download_word(void){
 
 	if(rx_flag){
 
-		while( recibido != por_recibir)
+		while( first_recived != last_recived)
 		{
-			word_down[i]=buffer_recived[recibido];
-			recibido= (recibido + 1) % BUFFER_SIZE;
+			word_down[i]=buffer_recived[first_recived];
+			first_recived= (first_recived + 1) % BUFFER_SIZE;
 			i++;
 		}
 
