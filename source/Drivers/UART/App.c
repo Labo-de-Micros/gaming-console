@@ -2,9 +2,9 @@
  * INCLUDE HEADER FILES
  ******************************************************************************/
 #include "board.h"
-#include "gpio.h"
+#include "./Drivers/GPIO/gpio.h"
 #include "./Drivers/SysTick/SysTick.h"
-#include "uart.h"
+#include "./Drivers/UART/uart.h"
 #include"./Drivers/Timer/timer.h"
 //#define DEBUG_OSCILLOSCOPE
 /*******************************************************************************
@@ -40,26 +40,21 @@ void App_Init (void){
  	uart_cfg_t uart_test;
  	uart_test.baudrate=9600;
  	uart_init(UART_3, uart_test);
-
-
-
-
 	return;
 }
 
 /* Función que se llama constantemente en un ciclo infinito */
 void App_Run (void){
-	char word[]="A";
+	char word[]="ABCD";
 	//char word[]="Tuvi";
 	//UART_send_data('A');
-	upload_word(UART_3,word,1);
+	upload_word(UART_3,word,4);
 	timerDelay(TIMER_MS2TICKS(500));
 	while (1) {
 
-		//timerDelay(TIMER_MS2TICKS(300));
+		timerDelay(TIMER_MS2TICKS(1000));
 		download_word();
-
-
+		//upload_word(UART_3,word,1);
 	}
 	return;
 }
