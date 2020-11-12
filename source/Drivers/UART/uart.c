@@ -19,6 +19,10 @@ static uint8_t rx_data;
 
 #define BUFFER_SIZE 100
 #define TERMINADOR	'\0'
+
+
+static UART_Type *  uarts_ptr[]= UART_BASE_PTRS;
+
 uint8_t buffer_send[BUFFER_SIZE];
 uint8_t buffer_recived[BUFFER_SIZE];
 
@@ -54,6 +58,7 @@ void PCR_config(uint32_t port_name, uint32_t pin2use, uint32_t mux_value)
 void uart_init (UART_type_t id, uart_cfg_t config)
 {
 	//activo el clock-gating del uart a utilizar
+
 	switch (id)
 	{
 	case UART_0:
@@ -75,6 +80,12 @@ void uart_init (UART_type_t id, uart_cfg_t config)
 		break;
 	case UART_3:
 		SIM->SCGC4 |= SIM_SCGC4_UART3_MASK;
+
+		PCR_config(PC,UART3_RX_PIN,3);
+		PCR_config(PC,UART3_TX_PIN,3);
+
+		NVIC_EnableIRQ(UART3_RX_TX_IRQn);
+
 		break;
 	case UART_4:
 		SIM->SCGC1 |= SIM_SCGC1_UART4_MASK;
@@ -96,25 +107,25 @@ void uart_init (UART_type_t id, uart_cfg_t config)
 	sbr= clock/(config.baudrate << 4);
 	brfa= (clock << 1) / config.baudrate - (sbr << 5);
 
-	UART0->BDH=UART_BDH_SBR(sbr >> 8);
-	UART0->BDL=UART_BDL_SBR(sbr);
+	uarts_ptr[id]->BDH=UART_BDH_SBR(sbr >> 8);
+	uarts_ptr[id]->BDL=UART_BDL_SBR(sbr);
 
 	//termino el seteo del baudrate
 
 	//configuro C1 para el largo de la palabra, paridad, stop_bit
-	UART0->C1=0x01;	//length 8, no parity, 1 stop_bit
+	uarts_ptr[id]->C1=0x01;	//length 8, no parity, 1 stop_bit
 
 
-	UART0->C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
+	uarts_ptr[id]->C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK );
 
 
 	//habilito para que pueda enviar y transmitir
 	//solo habilito las interrupciones al recbir ya que yo decido cuando transmitir
-	UART0->TWFIFO=0; //esto es para el buffer fifo
+	uarts_ptr[id]->TWFIFO=0; //esto es para el buffer fifo
 
-	UART0->C2=UART_C2_TE_MASK|UART_C2_RE_MASK |  UART_C2_RIE_MASK;
+	uarts_ptr[id]->C2=UART_C2_TE_MASK|UART_C2_RE_MASK |  UART_C2_RIE_MASK;
 	//
-	UART0->S2 &= ~(0x06); // MSBF = 0, BRK13 = 0
+	uarts_ptr[id]->S2 &= ~(0x06); // MSBF = 0, BRK13 = 0
 
 }
 
@@ -164,7 +175,43 @@ __ISR__ UART0_RX_TX_IRQHandler (void)
 
 }
 
-void upload_word(char * word, uint16_t can){
+
+__ISR__ UART3_RX_TX_IRQHandler (void)
+{
+	unsigned char s1;
+
+	s1=UART3->S1;			// Dummy read to clear status register
+
+	if( s1 & UART_S1_RDRF_MASK)		//cuando recibo transmisiones que son de mas de una palabra
+	{
+		rx_data=UART3->D;
+		buffer_recived[last_recived]=rx_data;
+		last_recived = (last_recived + 1) % BUFFER_SIZE;
+		rx_flag=true;
+
+
+	}
+	else if( s1 & UART_S1_TDRE_MASK)
+	{
+		UART3->D=buffer_send[first_2_send];
+		first_2_send = (first_2_send + 1) % BUFFER_SIZE;
+		if(first_2_send == last_2_send)
+		{
+			UART3->C2 &= ~UART_C2_TIE_MASK;			//deshabilito la interrupcion asi dejo de enviar
+		}
+
+	}
+	//rx_flag=true;
+
+	//UART_send_data(rx_data+1);
+
+}
+
+
+
+
+
+void upload_word(UART_type_t id,char * word, uint16_t can){
 
 	uint8_t temp=0;
 
@@ -174,7 +221,7 @@ void upload_word(char * word, uint16_t can){
 		temp++;
 		last_2_send= (last_2_send + 1) % BUFFER_SIZE;
 	}
-	UART0->C2 |= UART_C2_TIE_MASK;
+	uarts_ptr[id]->C2 |= UART_C2_TIE_MASK;
 
 }
 
@@ -191,7 +238,7 @@ void download_word(void){
 			i++;
 		}
 
-		upload_word(word_down,i);
+		upload_word(UART_3,word_down,i);
 		rx_flag=false;
 	}
 

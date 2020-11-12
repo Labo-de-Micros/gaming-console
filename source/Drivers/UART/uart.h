@@ -25,6 +25,9 @@
 #define UART0_TX_PIN 17 //PTB17
 #define UART0_RX_PIN 16 //PTB16
 
+#define UART3_TX_PIN 17 //PTB11
+#define UART3_RX_PIN 16 //PTB10
+
 #define __CORE_CLOCK__ 	100000000U
 
 /*******************************************************************************
@@ -101,7 +104,7 @@ unsigned char UART_Recieve_Data(void);
 //funcion que se queda escuchando hasta que le llega un mensaje a traves de aurt
 
 
-void upload_word(char * word, uint16_t can);
+void upload_word(UART_type_t id,char * word, uint16_t can);
 //copia el mensaje al buffer y activa las interrupciones para mandarlo
 
 
