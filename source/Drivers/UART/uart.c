@@ -8,7 +8,7 @@
 
 #include "MK64F12.h"
 #include "uart.h"
-#include "../GPIO/gpio.h"
+#include "gpio.h"
 //#include "board.h"
 #include <stdbool.h>
 
@@ -102,7 +102,14 @@ void uart_init (UART_type_t id, uart_cfg_t config)
 	uint16_t sbr, brfa;
 	uint32_t clock;
 
-	clock= __CORE_CLOCK__;	//cambiar si no se usa el UART0 o UART1
+	if( (id==UART_0 || id == UART_1) ){
+		clock= __CORE_CLOCK__;	//cambiar si no se usa el UART0 o UART1
+	}
+	else
+	{
+		clock= __CORE_CLOCK__ >> 1;	//por si utilizo otro canal de UART qque no sea el 1 u 0
+	}
+
 
 	sbr= clock/(config.baudrate << 4);
 	brfa= (clock << 1) / config.baudrate - (sbr << 5);
