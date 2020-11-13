@@ -16,14 +16,13 @@
 //////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
+#include <stdbool.h>
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-
-#define ADDRESS_CYCLE_BYTES 2
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -34,20 +33,22 @@
 typedef void (* pfunc) (void);
 
 typedef enum{
-         I2C_NO_FAULT = 0,
-         I2C_BUS_BUSY,
-         I2C_TIMEOUT,
-         I2C_SLAVE_ERROR,
+	I2C_NO_FAULT,
+	I2C_BUS_BUSY,
+	I2C_TIMEOUT,
+	I2C_SLAVE_ERROR,
 }I2C_FAULT;
 
 typedef struct{
-	uint8_t * data;
-	uint8_t data_size; // en bytes
-	uint8_t register_address;
-	uint8_t slave_address;
-	pfunc callback;
-	I2C_FAULT fault;
+	pfunc callback;				// Callback for when the transfer is finished
+	I2C_FAULT fault;			// Fault saved of the transfer, important to check in the callback.
+	uint8_t * data;				// Pointer to data buffer
+	uint8_t data_size; 			// Amount of Bytes
+	uint8_t slave_address;		// Address of the module to communicate with
+	uint8_t register_address;	// Register address of the given module to communicate.
 }I2C_COM_CONTROL;
+
+typedef enum {I2C_0, I2C_1, I2C_2}I2C_ChannelType;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -55,27 +56,17 @@ typedef struct{
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void I2C_init(uint8_t channel);
+void I2C_init(I2C_ChannelType channel);
 /*****************************************************************
  * @brief Function to initialize I2C Driver module
- * @param channel: Channel of the I2C to initialize.
+ * @param channel: Channel of the I2C to initialize. I2C0, I2C1, I2C2
  ****************************************************************/
 
-void I2C_read_msg(I2C_COM_CONTROL * i2c_comm);
-/*****************************************************************
- * @brief Function to read a message from the I2C module
- * @param i2c_comm: Pointer to communication parameters.
- ****************************************************************/
-
-void I2C_write_msg(I2C_COM_CONTROL * i2c_comm);
+bool I2C_init_transcieve(I2C_COM_CONTROL * i2c_comm, bool read);
 /*****************************************************************
  * @brief Function to write a message from the I2C module
  * @param i2c_comm: Pointer to communication parameters.
+ * @returns: true if communication started, false otherwise.
  ****************************************************************/
-
-I2C_FAULT I2C_read_msg_blocking (uint8_t * buffer, uint8_t data_size,	uint8_t register_address, uint8_t slave_address );
-
-I2C_FAULT I2C_write_msg_blocking (uint8_t * msg, uint8_t data_size,	uint8_t register_address, uint8_t slave_address );
-
 
 #endif /* I2C_H_ */

@@ -8,7 +8,7 @@
 
 #include "MK64F12.h"
 #include "uart.h"
-#include "gpio.h"
+#include "../GPIO/gpio.h"
 //#include "board.h"
 #include <stdbool.h>
 

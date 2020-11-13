@@ -23,16 +23,13 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-// On Board User LEDs
-#define PIN_LED_RED     PORTNUM2PIN(PB,22) 		// PTB22
-#define PIN_LED_GREEN   PORTNUM2PIN(PB,26)		// PTB26
-#define PIN_LED_BLUE    PORTNUM2PIN(PB,21) 		// PTB21
+// On Board User LED
 
 
 
-#define INTERRUPT_PIN	PORTNUM2PIN(PC,6)		//PTC5
-#define DEBUG_PIN       PORTNUM2PIN(PE,25)		//PTE25
-#define SIGNAL_PIN		PORTNUM2PIN(PC,12)		//PTC12
+// #define INTERRUPT_PIN	PORTNUM2PIN(PC,6)		//PTC5
+// #define DEBUG_PIN       PORTNUM2PIN(PE,25)		//PTE25
+// #define SIGNAL_PIN		PORTNUM2PIN(PC,12)		//PTC12
 
 #define LED_ACTIVE			LOW
 
@@ -46,6 +43,9 @@
 #define SPI_PIN_SOUT    PORTNUM2PIN(PD,2) 		// PTD2
 #define SPI_PIN_SIN		PORTNUM2PIN(PD,3) 		// PTD3
 #define SPI_PIN_PCS0    PORTNUM2PIN(PC,4) 		// PTC4
+
+#define I2C_SDA			PORTNUM2PIN(PE,25) 		// PTE25
+#define I2C_SCL			PORTNUM2PIN(PE,24) 		// PTE24
 
 
 #endif // _BOARD_H_
