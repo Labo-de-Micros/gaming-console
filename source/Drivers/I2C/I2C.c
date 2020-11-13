@@ -14,7 +14,7 @@
 
 #include "I2C.h"
 #include "../../board.h"
-#include "../../../SDK/CMSIS/MK64F12.h"
+#include "MK64F12.h"
 #include <stddef.h>
 
 //////////////////////////////////////////////////////////////////
@@ -82,12 +82,6 @@ static uint8_t data_index;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-static void I2C0_IRQHandler(void);
-/*****************************************************************
- * @brief IRQ Handler for the I2C module, it performs the corresponding
- * 			state machine for the selected mode of communication.
- ****************************************************************/
-
 static void end_transcieve(I2C_FAULT fault);
 /*****************************************************************
  * @brief Function to end the transfer between the I2C module
@@ -125,18 +119,16 @@ void I2C_init(I2C_ChannelType channel){
 	i2c->C1 = 0x00; 							// Initialize the control register module in 0
 	i2c->C1 |= I2C_C1_IICEN_MASK; 				// Enable the I2C moudle operation
 	i2c->C1 |= I2C_C1_IICIE_MASK; 				// Enables I2C interrupts
-	// i2c->S = I2C_S_TCF_MASK | I2C_S_IICIF_MASK; VER SI SE PUEDE BORRARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+	i2c->S = I2C_S_TCF_MASK | I2C_S_IICIF_MASK; //VER SI SE PUEDE BORRARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
 	
 	// Frequency Divider Register
 	i2c->F = I2C_F_MULT(0) | I2C_F_ICR(0); 		// Set the Multiple Factor in 1(00) and the ClockRate prescaler in 00
-
+	NVIC_EnableIRQ(i2c_irqs[channel]);			// Enable all interrupts from I2C
 	// Pins configuration
 	port_SDA->PCR[pin_SDA] |= PORT_PCR_MUX(5); 	// Set I2C alternative
 	port_SDA->PCR[pin_SDA] |= PORT_PCR_ODE_MASK;// Set open drain enable (See page 1549 Reference manual.)
 	port_SCL->PCR[pin_SCL] |= PORT_PCR_MUX(5);	// Set I2C alternative
 	port_SCL->PCR[pin_SCL] |= PORT_PCR_ODE_MASK;// Set open drain enable
-	
-	NVIC_EnableIRQ(i2c_irqs[channel]);			// Enable all interrupts from I2C
 	return;
 }
 
@@ -190,7 +182,7 @@ static void end_transcieve(I2C_FAULT fault){
 	return;
 }
 
-static void I2C0_IRQHandler(void){
+void I2C0_IRQHandler(void){
 /*****************************************************************
  * @brief IRQ Handler for the I2C module, it performs the corresponding
  * 			state machine for the selected mode of communication.
