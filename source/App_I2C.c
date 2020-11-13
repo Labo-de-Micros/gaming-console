@@ -47,7 +47,7 @@ typedef struct{
 //////////////////////////////////////////////////////////////////
 
 static read_data * r_data;
-uint8_t Buffer[FXOS8700CQ_READ_LEN];
+uint8_t Buffer[BUFFER_SIZE];
 I2C_COM_CONTROL i2c_com;
 read_data data;
 
@@ -58,7 +58,6 @@ read_data data;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void callback_read (void);
 void dummy(void){};
 
 //////////////////////////////////////////////////////////////////
@@ -74,18 +73,23 @@ void App_Init (void){
 }
 
 void App_Run (void){
+    i2c_com.data = Buffer;
+    i2c_com.data_size = BUFFER_SIZE;
+    i2c_com.callback = dummy;
+    i2c_com.slave_address =  MAGN_ADRESS_SLAVE;
+    i2c_com.fault = I2C_NO_FAULT;
+    
 	i2c_com.register_address = TEST_ADDRESS_W;
 	i2c_com.data[0] = 0xAB;
 	i2c_com.data_size = 1;
-	I2C_write_msg(&i2c_com);
+	I2C_init_transcieve(&i2c_com, false);
 	timerDelay(TIMER_MS2TICKS(100));
 
 	i2c_com.data[0] = 0xFF;
     i2c_com.data_size = 1;
     i2c_com.register_address = TEST_ADDRESS_R;
-    I2C_read_msg(&i2c_com);
+    I2C_init_transcieve(&i2c_com, true);
     timerDelay(TIMER_MS2TICKS(1000));
-	callback_read();
 	return;
 }
 
@@ -95,21 +99,3 @@ void App_Run (void){
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void callback_read(void){
-
-    if(i2c_com.fault == I2C_NO_FAULT){
-    	r_data->pAccelData.x = (int16_t)(((Buffer[1] << 8) | Buffer[2]))>> 2;
-		r_data->pAccelData.y = (int16_t)(((Buffer[3] << 8) | Buffer[4]))>> 2;
-		r_data->pAccelData.z = (int16_t)(((Buffer[5] << 8) | Buffer[6]))>> 2;
-        // copy the magnetometer byte data into 16 bit words
-        r_data->pMagnData.x = (int16_t)(Buffer[7] << 8) | Buffer[8];
-        r_data->pMagnData.y = (int16_t)(Buffer[9] << 8) | Buffer[10];
-        r_data->pMagnData.z = (int16_t)(Buffer[11] << 8) | Buffer[12];
-
-        r_data->error = I2C_OK;
-    }
-    else
-        r_data->error = I2C_ERROR;
-
-	return;
-}
