@@ -23,10 +23,14 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define SPI_DRIVER_ALT		2                       // Alternativa SPI K64
-#define SPI_DRIVER_INPUT	1
-#define SPI_DRIVER_BR       5
-#define SPI_DRIVER_PBR      1
+#define SPI_DRIVER_ALT			2 	// Alternativa SPI K64F
+
+#define SPI_STOP_TRANSMISSION	(SPI_driver_SPI[module_index]->MCR =( SPI_driver_SPI[module_index]->MCR & (~SPI_MCR_HALT_MASK)) | SPI_MCR_HALT(1))
+#define SPI_START_TRANSMISSION	(SPI_driver_SPI[module_index]->MCR =( SPI_driver_SPI[module_index]->MCR & (~SPI_MCR_HALT_MASK)) | SPI_MCR_HALT(0))
+#define SPI_RESTART_TCF			(SPI_driver_SPI[module_index]->SR  =( SPI_driver_SPI[module_index]->SR  & (~SPI_SR_TCF_MASK)  ) | SPI_SR_TCF(1))
+#define SPI_GET_TCF				(SPI_driver_SPI[module_index]->SR | SPI_SR_TCF_MASK) //No se si va un AND aca
+#define SPI_GET_RXCTR			(SPI_driver_SPI[module_index]->SR & SPI_SR_RXCTR_MASK)
+#define SPI_GET_POPR			(SPI_driver_SPI[module_index]->POPR)
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -45,10 +49,8 @@ typedef struct{
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static bool trasmiting=false;
 static SPI_Type *SPI_driver_SPI[] = {SPI0, SPI1, SPI2};
-// static PORT_Type * ports[] = PORT_BASE_PTRS;
-// static uint32_t sim_port[] = {SIM_SCGC5_PORTA_MASK, SIM_SCGC5_PORTB_MASK, SIM_SCGC5_PORTC_MASK, SIM_SCGC5_PORTD_MASK, SIM_SCGC5_PORTE_MASK};
+static uint8_t module_index;
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -67,43 +69,53 @@ static void port_setup(spi_pin_t spi_pin);
  * @param spi_pin The pin to configure.
  ****************************************************************/
 
-static void mcr_setup(void);
-/*****************************************************************
- * @brief Function to configure the MCR register.
- ****************************************************************/
-
-static void ctar_setup(void);
-/*****************************************************************
- * @brief Function to configure the CTAR register.
- ****************************************************************/
-
-static void startTrasmissionReception(void);
-
-static void stopTrasmissionReception(void);
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void SPI_init(void){
+void SPI_init(SPI_module_t module){
 /*****************************************************************
  * @brief Function to initialize the SPI comunication protocol
  *          driver
+ * @param module: Module of the SPI from K64F to utilize, SPI0, SPI1 or
+ *                  SPI2.
  ****************************************************************/
 	static bool ya_init = false;
 	if(!ya_init){
+		module_index = module;
 		port_init();						// Inicializo los puertos
-		SIM->SCGC6 |= SIM_SCGC6_SPI0(1); 	// Habilito el Clock Gating
-		mcr_setup();						// Configuro el MCR register
-		ctar_setup();						// Configuro el CTAR register
+		if(module == SPI_0)
+			SIM->SCGC6 |= SIM_SCGC6_SPI0(1); 	// Habilito el Clock Gating
+		else if (module == SPI_1)
+			SIM->SCGC6 |= SIM_SCGC6_SPI1(1);
+		else if (module == SPI_2)
+			SIM->SCGC6 |= SIM_SCGC6_SPI2(1);
+
+		// Configure MCR
+		SPI_driver_SPI[module_index]->MCR &= ~SPI_MCR_DCONF(0b11); 	//Pongo el DCONF en 00 para configurar el SPI
+		SPI_driver_SPI[module_index]->MCR |= SPI_MCR_MSTR(1);		//Lo configuro en modo Master
+		SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CONT_SCKE(1);	//Activo el Clock Continuo
+		SPI_driver_SPI[module_index]->MCR |= SPI_MCR_MTFE(0);
+		SPI_driver_SPI[module_index]->MCR |= SPI_MCR_PCSIS(1);
+		SPI_driver_SPI[module_index]->MCR &= ~SPI_MCR_MDIS(1);
+		SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CLR_RXF(1);
+		SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CLR_TXF(1);
+
+		// Configure CTAR
+		SPI_driver_SPI[module_index]->CTAR[0] &= ~SPI_CTAR_PCSSCK(0b11);
+		SPI_driver_SPI[module_index]->CTAR[0] &= ~SPI_CTAR_FMSZ_MASK;
+		SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_FMSZ(7);
+		SPI_driver_SPI[module_index]->CTAR[0] &= ~SPI_CTAR_BR_MASK;
+		SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_BR(0b1111);
+
 		ya_init = true;
 	}
     return;
 }
 
-uint8_t SPI_sendReceive(uint8_t * data2end, uint8_t size,uint8_t * recivedData){
+uint8_t SPI_transcieve(uint8_t * data2end, uint8_t size, uint8_t * recived_data){
 /*****************************************************************
  * @brief Function to send data over the SPI protocol. This function
  *          is a blocking one
@@ -112,89 +124,36 @@ uint8_t SPI_sendReceive(uint8_t * data2end, uint8_t size,uint8_t * recivedData){
  * @param size Size of the array containing the data.
  * @param recivedData Array containing the data received from the slave.
  * @returns The amount of data stored in receivedData.
- ****************************************************************/
-
-	static uint32_t pushrInicial=SPI_PUSHR_PCS(1)|SPI_PUSHR_CONT(1); //cont 1
-	static uint32_t pushrFinal=SPI_PUSHR_PCS(1)|SPI_PUSHR_CONT(0)|SPI_PUSHR_EOQ(1);//cont0 eoq
-	
-	uint32_t pushr2send=0;
-	uint8_t dataRecived=0;
-	// Bajar todos los flags del sr
-	for(int i = 0 ; i < size ; i++){
-		if((i+1) == size){// Estoy en el ultimo dato a mandar
-			pushr2send=pushrFinal|SPI_PUSHR_TXDATA(data2end[i]);
+ ****************************************************************/	
+	uint8_t i;
+	for(i = 0 ; i < size ; i++){
+		SPI_STOP_TRANSMISSION; 	// STOP Trasmission (HALT 1)
+		{
+			// Scope only for undestanding my code.
+			SPI_RESTART_TCF;
+			// Set PUSHR
+			if((i+1) != size)												// Data to send, not last.
+				SPI_driver_SPI[module_index]->PUSHR = 	SPI_PUSHR_PCS(1)  | \
+														SPI_PUSHR_CONT(1) |	\
+														SPI_PUSHR_TXDATA(data2end[i]);	// CONT 1
+			else															// Last data to send
+				SPI_driver_SPI[module_index]->PUSHR = 	SPI_PUSHR_PCS(1)  | \
+														SPI_PUSHR_CONT(0) | \
+														SPI_PUSHR_EOQ(1)  | \
+														SPI_PUSHR_TXDATA(data2end[i]);	// CONT 0 | EOQ 1
 		}
-		else{ // No es el ultimo dato que mando
-			pushr2send=pushrInicial|SPI_PUSHR_TXDATA(data2end[i]);
-		}
+		SPI_START_TRANSMISSION;	// START Trasmission (HALT 0)
 
+		while(!SPI_GET_TCF);	// Wait for frame to send. (Wait until TCF == 1)
 
-		stopTrasmissionReception();
-		SPI_driver_SPI[0]->SR=(SPI_driver_SPI[0]->SR & (~SPI_SR_TCF_MASK) ) | SPI_SR_TCF(1) ; // Reinicio el tcf
-		SPI_driver_SPI[0]->PUSHR=pushr2send;
-		startTrasmissionReception();
+		//SPI_driver_SPI[module_index]->SR= (SPI_driver_SPI[module_index]->SR & ~SPI_SR_TCF_MASK)| SPI_SR_TCF_MASK; // CREO Q ESTA LINEA NO HACE FALTA(NO HACE NADA)
 
-
-		while(!(SPI_driver_SPI[0]->SR & SPI_SR_TCF_MASK)); // Espero a que se envie el frame
-
-		SPI_driver_SPI[0]->SR= (SPI_driver_SPI[0]->SR & ~SPI_SR_TCF_MASK)| SPI_SR_TCF_MASK;
-
-		if(recivedData != NULL){
-			if(SPI_driver_SPI[0]->SR & SPI_SR_RXCTR_MASK){
-				recivedData[dataRecived]=SPI_driver_SPI[0]->POPR;
-				dataRecived++;
-			}
-		}
-		else{
-			SPI_driver_SPI[0]->POPR;
-		}
+		if(recived_data != NULL && SPI_GET_RXCTR)
+			recivedData[i] = SPI_GET_POPR;
+		else if(SPI_GET_RXCTR) // Nowhere to save the received data, only pop the data from the register.
+			SPI_GET_POPR;
 	}
-	//SPI_driver_SPI[0]->PUSHR|=SPI_PUSHR_PCS(1);
-	//SPI_driver_SPI[0]->PUSHR=(SPI_driver_SPI[0]->PUSHR&(~(SPI_PUSHR_TXDATA_MASK | SPI_PUSHR_PCS_MASK)))| SPI_PUSHR_TXDATA(data2end[i])|SPI_PUSHR_PCS(1);
-	//SPI_driver_SPI[0]->PUSHR=(SPI_driver_SPI[0]->PUSHR&(~(SPI_PUSHR_TXDATA_MASK)))| SPI_PUSHR_TXDATA(data2end[i]);
-	return dataRecived;
-}
-
-bool SPI_dataSended(void){
-/*****************************************************************
- * @brief Function to check if the data was sended.
- * @returns true if the data was sended, false otherwise.
- ****************************************************************/
-	if(trasmiting){
-		if(SPI_driver_SPI[0]->SR & SPI_SR_TCF_MASK){
-			SPI_driver_SPI[0]->SR = SPI_SR_TCF_MASK;	// Borro el flag
-			trasmiting=false;
-		}
-	}
-	return !trasmiting;
-}
-
-bool SPI_availableDataRecived(void){
-/*****************************************************************
- * @brief Function to check if data was received.
- * @returns true if data was received, false otherwise.
- ****************************************************************/
-	return true;	//Por ahora siempre devuelve true! Checkear esto.
-}
-
-uint8_t SPI_getData(uint8_t * dataRecived){
-/*****************************************************************
- * @brief Function to get the data received.
- * @param dataReceived pointer to an array for loading the data.
- * @returns the lenght of the data received.
- ****************************************************************/
-	uint8_t amauntOfData=0;
-	if(trasmiting){
-		return 0;
-	}
-	amauntOfData=(SPI_driver_SPI[0]->SR & SPI_SR_RXCTR_MASK)>>SPI_SR_RXCTR_SHIFT;
-	if(amauntOfData != 0){
-		for(int i=0 ; i < amauntOfData ; i++){
-			dataRecived[i]=SPI_driver_SPI[0]->POPR;
-		}
-	}
-
-	return amauntOfData;
+	return i;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -254,71 +213,4 @@ static void port_setup(spi_pin_t spi_pin){
 		//TODO: Veriicar que la configuracion de Lock sea compatible.
 	}
 	return;
-}
-
-static void mcr_setup(void){
-/*****************************************************************
- * @brief Function to configure the MCR register.
- ****************************************************************/
-	//DCONF. SPI
-	SPI0->MCR &= ~SPI_MCR_DCONF(0b11); 	//Pongo el DCONF en 00 para configurar el SPI
-    //MSTR. Master Mode
-    SPI0->MCR |= SPI_MCR_MSTR(1);		//Lo configuro en modo Master
-	//CONT_SCKE. Continuous SCK enabled.
-    SPI0->MCR |= SPI_MCR_CONT_SCKE(1);	//Activo el Clock Continuo
-
-#ifdef _DEBUG_SPI_
-	//FRZ. Halt serial transfers in debug mode
-	SPI0->MCR |= SPI_MCR_FRZ(1);
-#endif	// _DEBUG_SPI_
-
-	//MTFE Disbaled
-	SPI0->MCR |= SPI_MCR_MTFE(0);
-	//PCSIS. PCSx active LOW.
-    SPI0->MCR |= SPI_MCR_PCSIS(1);
-    //MDIS. Disable module clock
-    SPI0->MCR &= ~SPI_MCR_MDIS(1);
-    //CLR_RXF. Flush RX FIFO & clear RX Counter
-    SPI0->MCR |= SPI_MCR_CLR_RXF(1);
-    //CLR_TXF. Flush TX FIFO & clear TX Counter
-    SPI0->MCR |= SPI_MCR_CLR_TXF(1);
-	return;
-}
-
-static void ctar_setup(void){
-/*****************************************************************
- * @brief Function to configure the CTAR register.
- ****************************************************************/
-	//PCSSCK. PCS to SCK Prescaler value is 1.
-	SPI0->CTAR[0] &= ~SPI_CTAR_PCSSCK(0b11);
-	//FMSZ. Frame Size = 1Byte = 8bits.
-	SPI0->CTAR[0] &= ~SPI_CTAR_FMSZ_MASK;
-	SPI0->CTAR[0] |= SPI_CTAR_FMSZ(7);
-	//BR.
-	SPI0->CTAR[0] &= ~SPI_CTAR_BR_MASK;
-	SPI0->CTAR[0] |= SPI_CTAR_BR(0b1111);
-	/*
-	SPI_driver_SPI[0]->CTAR[0] = SPI_CTAR_CPOL(0) |  \
-									SPI_CTAR_CPHA(0)| \
-									SPI_CTAR_PBR(SPI_DRIVER_PBR) | \
-									SPI_CTAR_BR(SPI_DRIVER_BR) | \
-									SPI_CTAR_FMSZ(8-1)| \
-									SPI_CTAR_ASC(SPI_DRIVER_BR-3) | \
-									SPI_CTAR_PASC(SPI_DRIVER_PBR) | \
-									SPI_CTAR_CSSCK(SPI_DRIVER_BR-3) | \
-									SPI_CTAR_PCSSCK(SPI_DRIVER_PBR) |
-									SPI_CTAR_PDT(0)|\
-									SPI_CTAR_DT(0);
-	*/
-	return;
-}
-
-static void startTrasmissionReception(void){
-	SPI_driver_SPI[0]->MCR =(SPI_driver_SPI[0]->MCR & (~SPI_MCR_HALT_MASK)) | SPI_MCR_HALT(0);
-    return;
-}
-
-static void stopTrasmissionReception(void){
-	SPI_driver_SPI[0]->MCR =(SPI_driver_SPI[0]->MCR & (~SPI_MCR_HALT_MASK))| SPI_MCR_HALT(1);
-    return;
 }

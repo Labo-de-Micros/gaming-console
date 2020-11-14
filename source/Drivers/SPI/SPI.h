@@ -30,19 +30,27 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
+typedef enum{
+    SPI_0,
+    SPI_1,
+    SPI_2
+}SPI_module_t
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			FUNCTION PROTOTYPES WITH GLOBAL SCOPE				//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void SPI_init(void);
+void SPI_init(SPI_module_t module);
 /*****************************************************************
  * @brief Function to initialize the SPI comunication protocol
  *          driver
+ * @param module: Module of the SPI from K64F to utilize, SPI0, SPI1 or
+ *                  SPI2.
  ****************************************************************/
 
-uint8_t SPI_sendReceive(uint8_t * data2send, uint8_t size, uint8_t * recivedData);
+uint8_t SPI_transcieve(uint8_t * data2send, uint8_t size, uint8_t * recivedData);
 /*****************************************************************
  * @brief Function to send data over the SPI protocol. This function
  *          is a blocking one
@@ -52,26 +60,5 @@ uint8_t SPI_sendReceive(uint8_t * data2send, uint8_t size, uint8_t * recivedData
  * @param recivedData Array containing the data received from the slave.
  * @returns The amount of data stored in receivedData.
  ****************************************************************/
-
-bool SPI_dataSended(void);
-/*****************************************************************
- * @brief Function to check if the data was sended.
- * @returns true if the data was sended, false otherwise.
- ****************************************************************/
-
-bool SPI_availableDataRecived(void);
-/*****************************************************************
- * @brief Function to check if data was received.
- * @returns true if data was received, false otherwise.
- ****************************************************************/
-
-uint8_t SPI_getData(uint8_t * dataRecived);
-/*****************************************************************
- * @brief Function to get the data received.
- * @param dataReceived pointer to an array for loading the data.
- * @returns the lenght of the data received.
- ****************************************************************/
-
-
 
 #endif /* SPI_DRIVER_H_ */
