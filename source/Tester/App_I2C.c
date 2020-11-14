@@ -48,7 +48,7 @@ typedef struct{
 
 static read_data * r_data;
 uint8_t Buffer[BUFFER_SIZE];
-I2C_COM_CONTROL i2c_com;
+I2C_transcieve_t i2c_com;
 read_data data;
 
 
@@ -74,21 +74,16 @@ void App_Init (void){
 
 void App_Run (void){
     i2c_com.data = Buffer;
-    i2c_com.data_size = BUFFER_SIZE;
-    i2c_com.callback = dummy;
-    i2c_com.slave_address =  MAGN_ADRESS_SLAVE;
-    i2c_com.fault = I2C_NO_FAULT;
+    i2c_com.error = I2C_NO_ERROR;
     
-	i2c_com.register_address = TEST_ADDRESS_W;
 	i2c_com.data[0] = 0xAB;
 	i2c_com.data_size = 1;
-	I2C_init_transcieve(&i2c_com, false);
+	I2C_init_transcieve(MAGN_ADRESS_SLAVE, TEST_ADDRESS_W, &i2c_com, false);
 	timerDelay(TIMER_MS2TICKS(100));
 
 	i2c_com.data[0] = 0xFF;
     i2c_com.data_size = 1;
-    i2c_com.register_address = TEST_ADDRESS_R;
-    I2C_init_transcieve(&i2c_com, true);
+    I2C_init_transcieve(MAGN_ADRESS_SLAVE, TEST_ADDRESS_R, &i2c_com, true);
     timerDelay(TIMER_MS2TICKS(1000));
 	return;
 }

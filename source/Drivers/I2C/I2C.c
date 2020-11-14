@@ -69,12 +69,14 @@ typedef enum{	// Modes of transfer availables
 static I2C_Type* i2cPtrs [] = I2C_BASE_PTRS;
 static uint32_t simMasks[] = {SIM_SCGC4_I2C0_MASK, SIM_SCGC4_I2C1_MASK, SIM_SCGC1_I2C2_MASK};
 static IRQn_Type i2c_irqs[] = I2C_IRQS;
-
 static I2C_Type* i2c;
-static I2C_COM_CONTROL * i2c_com;
+
+static I2C_transcieve_t * i2c_com;
 static I2C_STATE state;
 static I2C_MODE mode;
 static uint8_t data_index;
+static uint8_t slave_address;
+static uint8_t register_address;
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -82,12 +84,19 @@ static uint8_t data_index;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-static void end_transcieve(I2C_FAULT fault);
+static void end_transcieve(I2C_error_t error);
 /*****************************************************************
  * @brief Function to end the transfer between the I2C module
- * @param fault: Reason for it to finalize the transaction, if 
- * 				fault == I2C_NO_FAULT the transaction finalized 
+ * @param error: Reason for it to finalize the transaction, if 
+ * 				error == I2C_NO_ERROR the transaction finalized 
  * 				correctly
+ ****************************************************************/
+
+static void handler(void);
+/*****************************************************************
+ * @brief IRQ Handler for the I2C0,I2C1, I2C2 module, it performs 
+ * 			the corresponding state machine for the selected mode of 
+ * 			communication.
  ****************************************************************/
 
 //////////////////////////////////////////////////////////////////
@@ -96,7 +105,7 @@ static void end_transcieve(I2C_FAULT fault);
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void I2C_init(I2C_ChannelType channel){
+void I2C_init(I2C_channel_t channel){
 /*****************************************************************
  * @brief Function to initialize I2C Driver module
  * @param channel: Channel of the I2C to initialize. I2C0, I2C1, I2C2
@@ -119,39 +128,48 @@ void I2C_init(I2C_ChannelType channel){
 	i2c->C1 = 0x00; 							// Initialize the control register module in 0
 	i2c->C1 |= I2C_C1_IICEN_MASK; 				// Enable the I2C moudle operation
 	i2c->C1 |= I2C_C1_IICIE_MASK; 				// Enables I2C interrupts
-	i2c->S = I2C_S_TCF_MASK | I2C_S_IICIF_MASK; //VER SI SE PUEDE BORRARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+	//i2c->S = I2C_S_TCF_MASK | I2C_S_IICIF_MASK; //VER SI SE PUEDE BORRARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
 	
 	// Frequency Divider Register
 	i2c->F = I2C_F_MULT(0) | I2C_F_ICR(0); 		// Set the Multiple Factor in 1(00) and the ClockRate prescaler in 00
-	NVIC_EnableIRQ(i2c_irqs[channel]);			// Enable all interrupts from I2C
 	// Pins configuration
 	port_SDA->PCR[pin_SDA] |= PORT_PCR_MUX(5); 	// Set I2C alternative
 	port_SDA->PCR[pin_SDA] |= PORT_PCR_ODE_MASK;// Set open drain enable (See page 1549 Reference manual.)
 	port_SCL->PCR[pin_SCL] |= PORT_PCR_MUX(5);	// Set I2C alternative
 	port_SCL->PCR[pin_SCL] |= PORT_PCR_ODE_MASK;// Set open drain enable
+
+	NVIC_EnableIRQ(i2c_irqs[channel]);			// Enable all interrupts from I2C
 	return;
 }
 
-bool I2C_init_transcieve(I2C_COM_CONTROL * i2c_comm, bool read){
+bool I2C_init_transcieve(uint8_t sl_address, uint8_t reg_address, I2C_transcieve_t * com, bool read){
 /*****************************************************************
  * @brief Function to write a message from the I2C module
+ * @param slave_address: I2C slave address of the module to communicate
+ * 							with.
+ * @param register_address: Register address of the module to communicate
+ * 							with
  * @param i2c_comm: Pointer to communication parameters.
  * @returns: true if communication started, false otherwise.
  ****************************************************************/
 	bool started = false;
 	if(I2C_CHECK_BUS != BUS_BUSY){
-		i2c_com = i2c_comm;					// Save the I2C data.
+		i2c_com = com;					// Save the I2C data.
+		slave_address = sl_address;
+		register_address = reg_address;
 		data_index = 0;
-		i2c_com->fault = I2C_NO_FAULT;
+
+		i2c_com->error = I2C_NO_ERROR;
 		state =  I2C_STATE_WRITE_REG_ADDRESS;
+
 		if(read)
 			mode =  I2C_MODE_READ;
 		else
 			mode =  I2C_MODE_WRITE;
 
-		I2C_SET_TX_MODE;					// Set Transmit Mode
-		I2C_START_SIGNAL;			 		// Set Master Mode, sends a STARTF to the I2C
-		I2C_WRITE_BYTE((i2c_com->slave_address << 1) & 0b11111110);	// Write address slave to the bus with the R/W bit in 0.
+		I2C_SET_TX_MODE;									// Set Transmit Mode
+		I2C_START_SIGNAL;			 						// Set Master Mode, sends a STARTF to the I2C
+		I2C_WRITE_BYTE((slave_address << 1) & 0b11111110);	// Write address slave to the bus with the R/W bit in 0.
 		started = true;
 	}
 	return started;
@@ -163,37 +181,41 @@ bool I2C_init_transcieve(I2C_COM_CONTROL * i2c_comm, bool read){
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static void end_transcieve(I2C_FAULT fault){
+static void end_transcieve(I2C_error_t error){
 /*****************************************************************
  * @brief Function to end the transfer between the I2C module
- * @param fault: Reason for it to finalize the transaction, if 
- * 				fault == I2C_NO_FAULT the transaction finalized 
+ * @param error: Reason for it to finalize the transaction, if 
+ * 				error == I2C_NO_ERROR the transaction finalized 
  * 				correctly
  ****************************************************************/
 	I2C_STOP_SIGNAL;				// Send a STOP Signal.(MST is set to 0 again.)
-	i2c_com->fault = fault;			// Save the fault
-	if ((mode == I2C_MODE_READ) & (fault == I2C_NO_FAULT)){
-									// If there was no fault and was reading, send a NACK
+	if(i2c_com->error == I2C_NO_ERROR)
+		i2c_com->error = error;		// Save the error only if there was no error before
+	if ((mode == I2C_MODE_READ) & (i2c_com->error == I2C_NO_ERROR)){
+									// If there was no error and was reading, send a NACK
 		I2C_CLEAR_NACK;
 		i2c_com->data[data_index] = I2C_READ_BYTE;	// Read last byte.
 	}
 	state = I2C_STATE_NONE;			// Set state to NONE, in case
-	i2c_com->callback();			// Call the callback anouncing that the transmission ended.
+
+	if(i2c_com->callback != NULL)
+		i2c_com->callback();		// Call the callback anouncing that the transmission ended.
 	return;
 }
 
-void I2C0_IRQHandler(void){
+static void handler(void){
 /*****************************************************************
- * @brief IRQ Handler for the I2C0 module, it performs the corresponding
- * 			state machine for the selected mode of communication.
+ * @brief IRQ Handler for the I2C0,I2C1, I2C2 module, it performs 
+ * 			the corresponding state machine for the selected mode of 
+ * 			communication.
  ****************************************************************/
-	I2C_CLEAR_IRQ_FLAG;	// Clear interrupt flag.
-	if(mode == I2C_MODE_READ){	// Read mode state machine
+	I2C_CLEAR_IRQ_FLAG;					// Clear interrupt flag.
+	if(mode == I2C_MODE_READ){			// Read mode state machine
 		switch(state){
 			case I2C_STATE_WRITE_REG_ADDRESS:
 				if(I2C_GET_RX_ACK == 0){ // ACK arrived
 					state = I2C_STATE_WRITE_DEV_ADDRESS_R;
-					I2C_WRITE_BYTE(i2c_com->register_address);
+					I2C_WRITE_BYTE(register_address);
 				}
 				else
 					end_transcieve(I2C_SLAVE_ERROR);
@@ -202,7 +224,7 @@ void I2C0_IRQHandler(void){
 				if(I2C_GET_RX_ACK == 0){ // ACK arrived
 					state = I2C_STATE_READ_DUMMY_DATA;
 					I2C_REPEAT_START_SIGNAL;
-					I2C_WRITE_BYTE((i2c_com->slave_address << 1) | 0b00000001);
+					I2C_WRITE_BYTE((slave_address << 1) | 0b00000001);
 				}
 				else
 					end_transcieve(I2C_SLAVE_ERROR);
@@ -221,7 +243,7 @@ void I2C0_IRQHandler(void){
 				break;
 			case I2C_STATE_READ_DATA:
 				if(data_index == i2c_com->data_size-1)
-					end_transcieve(I2C_NO_FAULT);
+					end_transcieve(I2C_NO_ERROR);
 				else {
 					if(data_index == i2c_com->data_size-2)
 						I2C_SET_NACK;
@@ -237,7 +259,7 @@ void I2C0_IRQHandler(void){
 		switch(state){
 			case I2C_STATE_WRITE_REG_ADDRESS:
 				if(I2C_GET_RX_ACK == 0){
-					I2C_WRITE_BYTE(i2c_com->register_address);
+					I2C_WRITE_BYTE(register_address);
 					state = I2C_STATE_WRITE_DATA;
 				}
 				else
@@ -246,7 +268,7 @@ void I2C0_IRQHandler(void){
 			case I2C_STATE_WRITE_DATA:
 				if(I2C_GET_RX_ACK == 0){
 					if(data_index == i2c_com->data_size)
-						end_transcieve(I2C_NO_FAULT);
+						end_transcieve(I2C_NO_ERROR);
 					else {
 						I2C_WRITE_BYTE(i2c_com->data[data_index]);
 						data_index++;
@@ -258,6 +280,21 @@ void I2C0_IRQHandler(void){
 				break;
 		}
 	}
+	return;
+}
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//							HANDLERS							//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+void I2C0_IRQHandler(void){
+/*****************************************************************
+ * @brief IRQ Handler for the I2C0 module, it performs the corresponding
+ * 			state machine for the selected mode of communication.
+ ****************************************************************/
+	handler();
 	return;
 }
 
@@ -266,77 +303,7 @@ void I2C1_IRQHandler(void){
  * @brief IRQ Handler for the I2C1 module, it performs the corresponding
  * 			state machine for the selected mode of communication.
  ****************************************************************/
-	I2C_CLEAR_IRQ_FLAG;	// Clear interrupt flag.
-	if(mode == I2C_MODE_READ){	// Read mode state machine
-		switch(state){
-			case I2C_STATE_WRITE_REG_ADDRESS:
-				if(I2C_GET_RX_ACK == 0){ // ACK arrived
-					state = I2C_STATE_WRITE_DEV_ADDRESS_R;
-					I2C_WRITE_BYTE(i2c_com->register_address);
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_WRITE_DEV_ADDRESS_R:
-				if(I2C_GET_RX_ACK == 0){ // ACK arrived
-					state = I2C_STATE_READ_DUMMY_DATA;
-					I2C_REPEAT_START_SIGNAL;
-					I2C_WRITE_BYTE((i2c_com->slave_address << 1) | 0b00000001);
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_READ_DUMMY_DATA:
-				if(I2C_GET_RX_ACK == 0){ // ACK arrived
-					state = I2C_STATE_READ_DATA;
-					I2C_SET_RX_MODE;
-					if(data_index == i2c_com->data_size-1){ 
-						I2C_SET_NACK;
-					}
-					uint8_t dummy_data = I2C_READ_BYTE;
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_READ_DATA:
-				if(data_index == i2c_com->data_size-1)
-					end_transcieve(I2C_NO_FAULT);
-				else {
-					if(data_index == i2c_com->data_size-2)
-						I2C_SET_NACK;
-					i2c_com->data[data_index] = I2C_READ_BYTE;
-					data_index++;
-				}
-				break;
-			default:
-				break;
-		}
-	}
-	else {	// Write mode state machine
-		switch(state){
-			case I2C_STATE_WRITE_REG_ADDRESS:
-				if(I2C_GET_RX_ACK == 0){
-					I2C_WRITE_BYTE(i2c_com->register_address);
-					state = I2C_STATE_WRITE_DATA;
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_WRITE_DATA:
-				if(I2C_GET_RX_ACK == 0){
-					if(data_index == i2c_com->data_size)
-						end_transcieve(I2C_NO_FAULT);
-					else {
-						I2C_WRITE_BYTE(i2c_com->data[data_index]);
-						data_index++;
-					}
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-			default:
-				break;
-		}
-	}
+	handler();
 	return;
 }
 
@@ -345,76 +312,6 @@ void I2C2_IRQHandler(void){
  * @brief IRQ Handler for the I2C2 module, it performs the corresponding
  * 			state machine for the selected mode of communication.
  ****************************************************************/
-	I2C_CLEAR_IRQ_FLAG;	// Clear interrupt flag.
-	if(mode == I2C_MODE_READ){	// Read mode state machine
-		switch(state){
-			case I2C_STATE_WRITE_REG_ADDRESS:
-				if(I2C_GET_RX_ACK == 0){ // ACK arrived
-					state = I2C_STATE_WRITE_DEV_ADDRESS_R;
-					I2C_WRITE_BYTE(i2c_com->register_address);
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_WRITE_DEV_ADDRESS_R:
-				if(I2C_GET_RX_ACK == 0){ // ACK arrived
-					state = I2C_STATE_READ_DUMMY_DATA;
-					I2C_REPEAT_START_SIGNAL;
-					I2C_WRITE_BYTE((i2c_com->slave_address << 1) | 0b00000001);
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_READ_DUMMY_DATA:
-				if(I2C_GET_RX_ACK == 0){ // ACK arrived
-					state = I2C_STATE_READ_DATA;
-					I2C_SET_RX_MODE;
-					if(data_index == i2c_com->data_size-1){ 
-						I2C_SET_NACK;
-					}
-					uint8_t dummy_data = I2C_READ_BYTE;
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_READ_DATA:
-				if(data_index == i2c_com->data_size-1)
-					end_transcieve(I2C_NO_FAULT);
-				else {
-					if(data_index == i2c_com->data_size-2)
-						I2C_SET_NACK;
-					i2c_com->data[data_index] = I2C_READ_BYTE;
-					data_index++;
-				}
-				break;
-			default:
-				break;
-		}
-	}
-	else {	// Write mode state machine
-		switch(state){
-			case I2C_STATE_WRITE_REG_ADDRESS:
-				if(I2C_GET_RX_ACK == 0){
-					I2C_WRITE_BYTE(i2c_com->register_address);
-					state = I2C_STATE_WRITE_DATA;
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-				break;
-			case I2C_STATE_WRITE_DATA:
-				if(I2C_GET_RX_ACK == 0){
-					if(data_index == i2c_com->data_size)
-						end_transcieve(I2C_NO_FAULT);
-					else {
-						I2C_WRITE_BYTE(i2c_com->data[data_index]);
-						data_index++;
-					}
-				}
-				else
-					end_transcieve(I2C_SLAVE_ERROR);
-			default:
-				break;
-		}
-	}
+	handler();
 	return;
 }

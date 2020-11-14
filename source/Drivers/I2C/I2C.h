@@ -6,8 +6,8 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#ifndef I2C_H_
-#define I2C_H_
+#ifndef _I2C_H_
+#define _I2C_H_
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -33,22 +33,23 @@
 typedef void (* pfunc) (void);
 
 typedef enum{
-	I2C_NO_FAULT,
 	I2C_BUS_BUSY,
-	I2C_TIMEOUT,
 	I2C_SLAVE_ERROR,
-}I2C_FAULT;
+	I2C_NO_ERROR
+}I2C_error_t;
 
 typedef struct{
 	pfunc callback;				// Callback for when the transfer is finished
-	I2C_FAULT fault;			// Fault saved of the transfer, important to check in the callback.
+	I2C_error_t error;			// Error saved of the transfer, important to check in the callback.
 	uint8_t * data;				// Pointer to data buffer
 	uint8_t data_size; 			// Amount of Bytes
-	uint8_t slave_address;		// Address of the module to communicate with
-	uint8_t register_address;	// Register address of the given module to communicate.
-}I2C_COM_CONTROL;
+}I2C_transcieve_t;
 
-typedef enum {I2C_0, I2C_1, I2C_2}I2C_ChannelType;
+typedef enum {
+	I2C_0, 
+	I2C_1, 
+	I2C_2
+}I2C_channel_t;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -56,17 +57,21 @@ typedef enum {I2C_0, I2C_1, I2C_2}I2C_ChannelType;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void I2C_init(I2C_ChannelType channel);
+void I2C_init(I2C_channel_t channel);
 /*****************************************************************
  * @brief Function to initialize I2C Driver module
  * @param channel: Channel of the I2C to initialize. I2C0, I2C1, I2C2
  ****************************************************************/
 
-bool I2C_init_transcieve(I2C_COM_CONTROL * i2c_comm, bool read);
+bool I2C_init_transcieve(uint8_t slave_address, uint8_t register_address, I2C_transcieve_t * i2c_com, bool read);
 /*****************************************************************
  * @brief Function to write a message from the I2C module
- * @param i2c_comm: Pointer to communication parameters.
+ * @param slave_address: I2C slave address of the module to communicate
+ * 							with.
+ * @param register_address: Register address of the module to communicate
+ * 							with
+ * @param i2c_com: Pointer to communication parameters.
  * @returns: true if communication started, false otherwise.
  ****************************************************************/
 
-#endif /* I2C_H_ */
+#endif	// _I2C_H_ 
