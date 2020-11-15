@@ -42,14 +42,14 @@
 
 void App_Init (void){
 	timerInit();
-	SPI_init();
+	SPI_init(SPI_0);
 	return;
 }
 
 void App_Run (void){
-	static uint8_t send[] = "HOLA COMO ANDAS GIL?";
+	static uint8_t send[] = "HOLA SOY IAN";
 	static uint8_t received[BUFFER_SIZE];
-	uint8_t amount_received = SPI_sendReceive(send,20,received);
+	uint8_t amount_received = SPI_transcieve(send,12,received);
 	timerDelay(TIMER_MS2TICKS(1000));
 	return;
 }
