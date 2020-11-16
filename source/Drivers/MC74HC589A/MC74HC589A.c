@@ -1,19 +1,30 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+//	@file		SysTick.c										//
+//	@brief		SysTick driver implementation					//
+//	@author		Grupo	4										//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 //							Headers								//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#include "./Drivers/Timer/timer.h"
-#include "./Drivers/SPI/SPI.h"
+#include "board.h"
+#include "MK64F12.h"
+#include <stdio.h>
+#include "./MC74HC589A.h"
+#include "../SPI/SPI.h"
+#include "../GPIO/gpio.h"
+#include "../Timer/timer.h"
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-
-#define BUFFER_SIZE		50
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -27,7 +38,6 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 //FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
@@ -40,19 +50,49 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void App_Init (void){
-	timerInit();
-	SPI_init(SPI_0);
-	return;
+void MC74HC589A_init(void){
+/*****************************************************************
+ * @brief Function to initialize the MC74HC589A driver
+ ****************************************************************/
+    //SPI_init(SPI_0);
+    //gpioMode(MC74HC589A_SHIFT_PIN, OUTPUT);
+    //gpioWrite(MC74HC589A_SHIFT_PIN,LOW);
+    return;
 }
 
-void App_Run (void){
-	static uint16_t send[BUFFER_SIZE];
-	send[0] = 0b0000111111111111;
-	static uint8_t received[BUFFER_SIZE];
-	uint8_t amount_received = SPI_transcieve(send,1,received);
-	timerDelay(TIMER_MS2TICKS(1000));
-	return;
+void MC74HC589A_save_data(uint8_t data){
+/*****************************************************************
+ * @brief Function to save the data into the MC74HC589A register
+ * @param data: A 16 bit data to save into the register.
+ ****************************************************************/
+    //uint16_t data_2_send = ((uint16_t)data)<<8;
+    //SPI_transcieve(&data_2_send, 1, NULL);
+    return;
+}
+
+void MC74HC589A_shift_data(uint8_t amount){
+/*****************************************************************
+ * @brief Function to shift the data previously saved.
+ * @param amount: amount of places to shift the data.
+ ****************************************************************/
+    //for(uint8_t i = 0; i < amount; i++){
+    //    gpioToggle(MC74HC589A_SHIFT_PIN);
+    //    timerDelay(1);
+    //    gpioToggle(MC74HC589A_SHIFT_PIN);
+    //}
+    return;
+}
+
+uint8_t MC74HC589A_get_data(void){
+/*****************************************************************
+ * @brief Function to get the data saved into the MC74HC589A register.
+ *          It erases the data saved.
+ ****************************************************************/
+    //uint16_t data_2_send = 0;
+    //uint16_t received = 0;
+    //SPI_transcieve(&data_2_send, 1, &received);
+    //return ((uint8_t)received);
+	return 1;
 }
 
 //////////////////////////////////////////////////////////////////

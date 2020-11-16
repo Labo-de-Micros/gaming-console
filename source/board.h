@@ -38,7 +38,6 @@
 #define PIN_SW3         PORTNUM2PIN(PA,4)		// PTA4
 
 // SPI
-#define _DEBUG_SPI_
 #define SPI_PIN_SCK	    PORTNUM2PIN(PD,1) 		// PTD1
 #define SPI_PIN_SOUT    PORTNUM2PIN(PD,2) 		// PTD2
 #define SPI_PIN_SIN		PORTNUM2PIN(PD,3) 		// PTD3
@@ -46,6 +45,8 @@
 
 #define I2C_SDA			PORTNUM2PIN(PE,25) 		// PTE25
 #define I2C_SCL			PORTNUM2PIN(PE,24) 		// PTE24
+
+#define MC74HC589A_SHIFT_PIN    ///
 
 
 #endif // _BOARD_H_

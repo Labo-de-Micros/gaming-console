@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-//	@file		SPI.h   										//
-//	@brief		SPI communication protocol driver implementation//
+//	@file		MC74HC589A.h   									//
+//	@brief		MC74HC589A Driver implementation                //
 //	@author		Grupo	4										//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#ifndef SPI_H_
-#define SPI_H_
+#ifndef _MC74HC589A_H
+#define _MC74HC589A_H
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -30,35 +30,33 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-typedef enum{
-    SPI_0,
-    SPI_1,
-    SPI_2
-}SPI_module_t;
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			FUNCTION PROTOTYPES WITH GLOBAL SCOPE				//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void SPI_init(SPI_module_t module);
+void MC74HC589A_init(void);
 /*****************************************************************
- * @brief Function to initialize the SPI comunication protocol
- *          driver
- * @param module: Module of the SPI from K64F to utilize, SPI0, SPI1 or
- *                  SPI2.
+ * @brief Function to initialize the MC74HC589A driver
  ****************************************************************/
 
-uint8_t SPI_transcieve(uint16_t * data2send, uint8_t size, uint8_t * recivedData);
+void MC74HC589A_save_data(uint8_t data);
 /*****************************************************************
- * @brief Function to send data over the SPI protocol. This function
- *          is a blocking one
- * @param data2send An array containing the data to send over this
- *                  protocol.
- * @param size Size of the array containing the data.
- * @param recivedData Array containing the data received from the slave.
- * @returns The amount of data stored in receivedData.
+ * @brief Function to save the data into the MC74HC589A register
+ * @param data: A 16 bit data to save into the register.
  ****************************************************************/
 
-#endif /* SPI_DRIVER_H_ */
+void MC74HC589A_shift_data(uint8_t amount);
+/*****************************************************************
+ * @brief Function to shift the data previously saved.
+ * @param amount: amount of places to shift the data.
+ ****************************************************************/
+
+uint8_t MC74HC589A_get_data(void);
+/*****************************************************************
+ * @brief Function to get the data saved into the MC74HC589A register.
+ *          It erases the data saved.
+ ****************************************************************/
+
+#endif // _MC74HC589A_H

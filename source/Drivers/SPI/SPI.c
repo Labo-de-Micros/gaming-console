@@ -101,9 +101,9 @@ void SPI_init(SPI_module_t module){
 		{// MCR Configuration
 			SPI_driver_SPI[module_index]->MCR &= ~SPI_MCR_DCONF(0b11); 	//Pongo el DCONF en 00 para configurar el SPI
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_MSTR(1);		//Lo configuro en modo Master
-			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CONT_SCKE(1);	//Activo el Clock Continuo
+			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CONT_SCKE(0);	//Desactivo el Clock Continuo
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_MTFE(0);
-			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_PCSIS(1);
+			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_PCSIS(0);		
 			SPI_driver_SPI[module_index]->MCR &= ~SPI_MCR_MDIS(1);
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CLR_RXF(1);
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CLR_TXF(1);
@@ -111,11 +111,11 @@ void SPI_init(SPI_module_t module){
 
 		{// CTAR configuration
 			SPI_driver_SPI[module_index]->CTAR[0] &= ~SPI_CTAR_PCSSCK(0b11);
-			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_CPOL(0);
+			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_CPOL(1);			// Polaridad del clock
 			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_CPHA(0);
-			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_FMSZ(7);
+			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_FMSZ(0b1111);		// Frame Size
 			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_PBR(0b00);
-			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_BR(0b1000);
+			SPI_driver_SPI[module_index]->CTAR[0] |= SPI_CTAR_BR(0b1111);		// Baud Rate
 		}
 
 		ya_init = true;
@@ -123,7 +123,7 @@ void SPI_init(SPI_module_t module){
     return;
 }
 
-uint8_t SPI_transcieve(uint8_t * data2end, uint8_t size, uint8_t * recived_data){
+uint8_t SPI_transcieve(uint16_t * data2end, uint8_t size, uint8_t * recived_data){
 /*****************************************************************
  * @brief Function to send data over the SPI protocol. This function
  *          is a blocking one
