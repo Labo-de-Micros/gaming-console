@@ -7,9 +7,9 @@
 
 
 #include "MK64F12.h"
-#include "uart.h"
+#include "./uart.h"
 #include "../GPIO/gpio.h"
-//#include "board.h"
+#include "../../board.h"
 #include <stdbool.h>
 
 static uint8_t rx_data;

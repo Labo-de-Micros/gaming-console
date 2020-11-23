@@ -103,7 +103,7 @@ void SPI_init(SPI_module_t module){
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_MSTR(1);		//Lo configuro en modo Master
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CONT_SCKE(0);	//Desactivo el Clock Continuo
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_MTFE(0);
-			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_PCSIS(0);		
+			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_PCSIS(1);		
 			SPI_driver_SPI[module_index]->MCR &= ~SPI_MCR_MDIS(1);
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CLR_RXF(1);
 			SPI_driver_SPI[module_index]->MCR |= SPI_MCR_CLR_TXF(1);
@@ -123,7 +123,7 @@ void SPI_init(SPI_module_t module){
     return;
 }
 
-uint8_t SPI_transcieve(uint16_t * data2end, uint8_t size, uint8_t * recived_data){
+uint8_t SPI_transcieve(uint16_t * data2end, uint8_t size, uint16_t * recived_data){
 /*****************************************************************
  * @brief Function to send data over the SPI protocol. This function
  *          is a blocking one
@@ -150,7 +150,7 @@ uint8_t SPI_transcieve(uint16_t * data2end, uint8_t size, uint8_t * recived_data
 
 		while(!SPI_GET_TCF);	// Wait for frame to send. (Wait until TCF == 1)
 
-		if(recived_data != NULL && SPI_GET_RXCTR)
+		if(recived_data != NULL) //&& SPI_GET_RXCTR)
 			recived_data[i] = SPI_GET_POPR;
 		else if(SPI_GET_RXCTR) // Nowhere to save the received data, only pop the data from the register.
 			SPI_GET_POPR;

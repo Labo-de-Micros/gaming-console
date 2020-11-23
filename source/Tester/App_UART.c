@@ -53,8 +53,8 @@ void App_Run (void){
 	while (1) {
 
 		timerDelay(TIMER_MS2TICKS(1000));
-		download_word();
-		//upload_word(UART_3,word,1);
+		//download_word();
+		upload_word(UART_3,word,4);
 	}
 	return;
 }

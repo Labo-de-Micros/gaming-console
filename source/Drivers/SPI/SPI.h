@@ -50,7 +50,7 @@ void SPI_init(SPI_module_t module);
  *                  SPI2.
  ****************************************************************/
 
-uint8_t SPI_transcieve(uint16_t * data2send, uint8_t size, uint8_t * recivedData);
+uint8_t SPI_transcieve(uint16_t * data2send, uint8_t size, uint16_t * recivedData);
 /*****************************************************************
  * @brief Function to send data over the SPI protocol. This function
  *          is a blocking one

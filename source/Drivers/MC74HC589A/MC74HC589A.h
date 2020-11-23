@@ -41,22 +41,26 @@ void MC74HC589A_init(void);
  * @brief Function to initialize the MC74HC589A driver
  ****************************************************************/
 
-void MC74HC589A_save_data(uint8_t data);
+void MC74HC589A_latch_data(void);
 /*****************************************************************
- * @brief Function to save the data into the MC74HC589A register
- * @param data: A 16 bit data to save into the register.
- ****************************************************************/
-
-void MC74HC589A_shift_data(uint8_t amount);
-/*****************************************************************
- * @brief Function to shift the data previously saved.
- * @param amount: amount of places to shift the data.
+ * @brief Function called periodically to latch the paralel data 
+ *			in its pins
  ****************************************************************/
 
 uint8_t MC74HC589A_get_data(void);
 /*****************************************************************
- * @brief Function to get the data saved into the MC74HC589A register.
- *          It erases the data saved.
+ * @brief Function to get the data previosuly latched in the IC.
+ * @returns: An 8bit digit with it digit correspondign to a specific
+ * 			pin of the latch in the folowing way:
+ * 			Answer:		01110101
+ * 								0	->	H
+ * 								1	->	G
+ * 								1	->	F
+ * 								1	->	E
+ * 								0	->	D
+ * 								1	->	C
+ * 								0	->	B
+ * 								1	->	A
  ****************************************************************/
 
 #endif // _MC74HC589A_H

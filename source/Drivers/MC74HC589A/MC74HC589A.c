@@ -19,6 +19,7 @@
 #include "../SPI/SPI.h"
 #include "../GPIO/gpio.h"
 #include "../Timer/timer.h"
+#include "../../board.h"
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -54,45 +55,51 @@ void MC74HC589A_init(void){
 /*****************************************************************
  * @brief Function to initialize the MC74HC589A driver
  ****************************************************************/
-    //SPI_init(SPI_0);
-    //gpioMode(MC74HC589A_SHIFT_PIN, OUTPUT);
-    //gpioWrite(MC74HC589A_SHIFT_PIN,LOW);
+	static bool ya_init = false;
+	if(!ya_init){
+		SPI_init(SPI_0);
+		gpioMode(MC74HC589A_LATCH_PIN, OUTPUT);
+		gpioMode(MC74HC589A_SHIFT_PIN, OUTPUT);
+		gpioWrite(MC74HC589A_LATCH_PIN,HIGH);
+		gpioWrite(MC74HC589A_SHIFT_PIN,LOW);
+		timerInit();		//Ver si hace falta esto.
+		ya_init = true;
+	}
     return;
 }
 
-void MC74HC589A_save_data(uint8_t data){
+void MC74HC589A_latch_data(void){
 /*****************************************************************
- * @brief Function to save the data into the MC74HC589A register
- * @param data: A 16 bit data to save into the register.
+ * @brief Function called periodically to latch the paralel data 
+ *			in its pins
  ****************************************************************/
-    //uint16_t data_2_send = ((uint16_t)data)<<8;
-    //SPI_transcieve(&data_2_send, 1, NULL);
-    return;
-}
-
-void MC74HC589A_shift_data(uint8_t amount){
-/*****************************************************************
- * @brief Function to shift the data previously saved.
- * @param amount: amount of places to shift the data.
- ****************************************************************/
-    //for(uint8_t i = 0; i < amount; i++){
-    //    gpioToggle(MC74HC589A_SHIFT_PIN);
-    //    timerDelay(1);
-    //    gpioToggle(MC74HC589A_SHIFT_PIN);
-    //}
+	gpioToggle(MC74HC589A_LATCH_PIN);
+	//timerDelay(1); 							// Esto hay q ver si es realmente necesario.
+	gpioToggle(MC74HC589A_LATCH_PIN);
     return;
 }
 
 uint8_t MC74HC589A_get_data(void){
 /*****************************************************************
- * @brief Function to get the data saved into the MC74HC589A register.
- *          It erases the data saved.
+ * @brief Function to get the data previosuly latched in the IC.
+ * @returns: An 8bit digit with it digit correspondign to a specific
+ * 			pin of the latch in the folowing way:
+ * 			Answer:		01110101
+ * 								0	->	H
+ * 								1	->	G
+ * 								1	->	F
+ * 								1	->	E
+ * 								0	->	D
+ * 								1	->	C
+ * 								0	->	B
+ * 								1	->	A
  ****************************************************************/
-    //uint16_t data_2_send = 0;
-    //uint16_t received = 0;
-    //SPI_transcieve(&data_2_send, 1, &received);
-    //return ((uint8_t)received);
-	return 1;
+	uint16_t received;
+	uint16_t send = 0;
+	gpioToggle(MC74HC589A_SHIFT_PIN);
+	uint8_t amount_received = SPI_transcieve(&send,1,&received);
+	gpioToggle(MC74HC589A_SHIFT_PIN);
+    return received>>8;
 }
 
 //////////////////////////////////////////////////////////////////
