@@ -170,7 +170,7 @@ void setup() {
   delay(1000);
   setup_wifi();          // initialize WIFI an connect to network
   setup_mqtt();          // initialize mqtt server 
-
+  //setup_uart();
   
 }
 
@@ -205,6 +205,16 @@ void loop() {
   
  
 } // End of main Loop
+
+//=======================SET UP UART==================================================================
+void setup_uart(void) {
+  
+   Serial.begin(9600, SERIAL_8N1);
+   //Serial.swap();                 //seteo el canal uart1 para la comunicacion
+   //Serial.setDebugOutput(true);
+  
+}
+
 
 //=======================SET UP WiFi==================================================================
 void setup_wifi(void) {
@@ -248,9 +258,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
  payload[length]=0; // Set terminator
   
- debug_message("Message arrived [ Topic:%s Length:%d Payload: %s ] \n",topic,length,payload);  //mensaje en el que informa que topico es 
+ //debug_message("Message arrived [ Topic:%s Length:%d Payload: %s ] \n",topic,length,payload);  //mensaje en el que informa que topico es 
 
- ParseTopic(topic,payload,length);
+ ParseTopic(topic,(char*)payload,length);
 
 }
 
@@ -258,29 +268,64 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 // ============================== MQTT PARSER ==================================================
 
-void ParseTopic(char* topic, byte* payload, unsigned int length)
+void ParseTopic(char* topic, char * payload, unsigned int length)
 {
-
+  
   if(!strcmp(topic,"Button/up"))
   {
-    debug_message("apretaron arriba",false);
+//    debug_message("apretaron arriba",false);
   }
   else if(!strcmp(topic,"Button/down"))
   {
-    debug_message("apretaron abajo",false);
+//    debug_message("apretaron abajo",false);
   }
   else if(!strcmp(topic,"Button/left"))
   {
-    debug_message("apretaron izquierda",false);
+//    debug_message("apretaron izquierda",false);
   }
   else if(!strcmp(topic,"Button/right"))
   {
-    debug_message("apretaron derecha",false);
+//    debug_message("apretaron derecha",false);
+  }
+  else if(!strcmp(topic,"Button/General"))
+  {
+    //debug_message("%s",payload);
+    //parsear por cada boton que hay y despues mandar por uart
+      if(!strcmp(payload,"rotate"))
+      {
+         Serial.write(27);
+      }
+      else if(!strcmp(payload,"push-down"))
+      {
+         Serial.write('D');
+      }
+      else if(!strcmp(payload,"move left"))
+      {
+         Serial.write('L');
+      }          
+      else if(!strcmp(payload,"move right"))
+      {
+         Serial.write('D');
+      }
+      else if(!strcmp(payload,"pause/resume"))
+      {
+         Serial.write('P');
+      }
+      else if(!strcmp(payload,"restart"))
+      {
+         Serial.write('R');
+      }
+              
   }
   else if(!strcmp(topic,"Brightness/level"))
   {
     debug_message("Nivel de brillo %s",payload);
-  }   
+    //Serial.write(atoi(payload));
+  }
+  
+
+
+     
        
 }
 
@@ -303,7 +348,7 @@ void reconnect() {
             mqtt_client.subscribe("Button/right");
             mqtt_client.subscribe("Button/left");
             mqtt_client.subscribe("Brightness/level");
-            
+            mqtt_client.subscribe("Button/General");
 //            mqtt_client.subscribe("light_box/Set_ldr_Delay");
 //            mqtt_client.subscribe("light_box/ldr_enable");
       }
