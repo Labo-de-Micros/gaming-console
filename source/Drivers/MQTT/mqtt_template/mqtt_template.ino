@@ -270,56 +270,42 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void ParseTopic(char* topic, char * payload, unsigned int length)
 {
-  
-  if(!strcmp(topic,"Button/up"))
-  {
-//    debug_message("apretaron arriba",false);
-  }
-  else if(!strcmp(topic,"Button/down"))
-  {
-//    debug_message("apretaron abajo",false);
-  }
-  else if(!strcmp(topic,"Button/left"))
-  {
-//    debug_message("apretaron izquierda",false);
-  }
-  else if(!strcmp(topic,"Button/right"))
-  {
-//    debug_message("apretaron derecha",false);
-  }
-  else if(!strcmp(topic,"Button/General"))
+  char test;
+  if(!strcmp(topic,"Button/General"))
   {
     //debug_message("%s",payload);
     //parsear por cada boton que hay y despues mandar por uart
       if(!strcmp(payload,"rotate"))
       {
-         Serial.write(27);
+         Serial.write('R');
       }
       else if(!strcmp(payload,"push-down"))
       {
-         Serial.write('D');
+         Serial.write('A');
       }
       else if(!strcmp(payload,"move left"))
       {
-         Serial.write('L');
+         Serial.write('I');
       }          
       else if(!strcmp(payload,"move right"))
       {
          Serial.write('D');
       }
-      else if(!strcmp(payload,"pause/resume"))
+      else if(!strcmp(payload,"enter"))
       {
-         Serial.write('P');
+         Serial.write('E');
       }
-      else if(!strcmp(payload,"restart"))
+      else if(!strcmp(payload,"escape"))
       {
-         Serial.write('R');
+         Serial.write('C');
       }
               
   }
   else if(!strcmp(topic,"Brightness/level"))
   {
-    debug_message("Nivel de brillo %s",payload);
+    test=(char)atoi(payload);
+    //debug_message("Nivel de brillo %d",test);
+    Serial.write(test);
     //Serial.write(atoi(payload));
   }
   
@@ -342,11 +328,11 @@ void reconnect() {
 			      digitalWrite(STATUS_LED,LED_ON);
   
             // ... and subscribe to topics
-            mqtt_client.subscribe("button_test");
-            mqtt_client.subscribe("Button/up");
-            mqtt_client.subscribe("Button/down");
-            mqtt_client.subscribe("Button/right");
-            mqtt_client.subscribe("Button/left");
+//            mqtt_client.subscribe("button_test");
+//            mqtt_client.subscribe("Button/up");
+//            mqtt_client.subscribe("Button/down");
+//            mqtt_client.subscribe("Button/right");
+//            mqtt_client.subscribe("Button/left");
             mqtt_client.subscribe("Brightness/level");
             mqtt_client.subscribe("Button/General");
 //            mqtt_client.subscribe("light_box/Set_ldr_Delay");
