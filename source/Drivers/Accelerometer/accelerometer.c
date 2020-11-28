@@ -13,8 +13,8 @@
 //////////////////////////////////////////////////////////////////
 
 #include "accelerometer.h"
-#include "./I2C/I2C.h"
-#include "./Timer/timer.h"
+#include "../I2C/I2C.h"
+#include "../Timer/timer.h"
 #include "../../board.h"
 #include "MK64F12.h"
 #include <stddef.h>
@@ -26,7 +26,7 @@
 //////////////////////////////////////////////////////////////////
 
 #define ACCELEROMETER_ADDRESS			0x1D
-#define ACCELEROMETER_SLAVE_ADDRESS 	0x1E // FXOS8700CQ I2C address
+#define ACCELEROMETER_SLAVE_ADDRESS 	0x1D // FXOS8700CQ I2C address
 #define ACCELEROMETER_DATA_PACK_LEN		  13 // Status plus 6 channels = 13 bytes
 
 
@@ -68,6 +68,7 @@ static uint8_t buffer[ACCELEROMETER_DATA_PACK_LEN]; //Reading Buffer
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 void dummy(void){};
+static void save_data (void);
 
 static void handler();
 /*****************************************************************
@@ -98,9 +99,9 @@ void accelerometer_init(){
 	configuration();
 	i2c_com.error = I2C_NO_ERROR;
 
-	timer_Init();
+	timerInit();
 	timer_id = timerGetId();
-	timerStart(timer_id,TIMER_MS2TICKS(100),TIM_MODE_PERIODIC,handler);
+	timerStart(timer_id,TIMER_MS2TICKS(1000),TIM_MODE_PERIODIC,handler);
 	return;
 }
 
@@ -118,27 +119,27 @@ static accelerometer_error_t configuration(){
 	i2c_com.data_size = 1;
 
 	register_address = ACCELEROMETER_CTRL_REG1;
-	i2c_com.data[0] = 0x00;
-
+	i2c_com.data = buffer;
+	buffer[0] = 0x00;
 	while (!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
 	register_address = ACCELEROMETER_CTRL_REG1;
-	i2c_com.data[0] = 0x1F;
+	buffer[0] = 0x1F;
 
 	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
 	register_address = ACCELEROMETER_M_CTRL_REG2;
-	i2c_com.data[0] = 0x20;
+	buffer[0] = 0x20;
 
 	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
 	register_address = ACCELEROMETER_XYZ_DATA_CFG;
-	i2c_com.data[0] = 0x01;
+	buffer[0] = 0x01;
 	
 	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
 	register_address = ACCELEROMETER_CTRL_REG1;
-	i2c_com.data[0] = 0x0D;
+	buffer[0] = 0x0D;
 
 	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 

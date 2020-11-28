@@ -63,7 +63,7 @@ void I2C_init(I2C_channel_t channel);
  * @param channel: Channel of the I2C to initialize. I2C0, I2C1, I2C2
  ****************************************************************/
 
-bool I2C_init_transcieve(uint8_t slave_address, uint8_t register_address, I2C_transcieve_t * i2c_com, bool read);
+bool I2C_init_transcieve(uint8_t sl_address, uint8_t reg_address, I2C_transcieve_t * com, bool read);
 /*****************************************************************
  * @brief Function to write a message from the I2C module
  * @param slave_address: I2C slave address of the module to communicate
