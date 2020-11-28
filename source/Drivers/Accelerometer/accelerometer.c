@@ -25,19 +25,31 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define ACCELEROMETER_ADDRESS			0x1D
-#define ACCELEROMETER_SLAVE_ADDRESS 	0x1D // FXOS8700CQ I2C address
-#define ACCELEROMETER_DATA_PACK_LEN		  13 // Status plus 6 channels = 13 bytes
+// FXOS8700CQ I2C Slave Address
+#define FXOS8700CQ_ADDRESS			0x1D
+#define FXOS8700CQ_SLAVE_ADDRESS 	0x1D // FXOS8700CQ I2C address
 
+
+#define FXOS8700CQ_DATA_PACK_LEN	  13 // Status plus 6 channels = 13 bytes
 
 //FXOS8700CQ internal register addresses
-#define ACCELEROMETER_STATUS 			0x00
-#define ACCELEROMETER_WHOAMI 			0x0D
-#define ACCELEROMETER_XYZ_DATA_CFG 		0x0E
-#define ACCELEROMETER_CTRL_REG1 		0x2A
-#define ACCELEROMETER_M_CTRL_REG1 		0x5B
-#define ACCELEROMETER_M_CTRL_REG2 		0x5C
-#define ACCELEROMETER_WHOAMI_VAL 		0xC7
+#define FXOS8700CQ_STATUS_REG           0x00
+#define FXOS8700CQ_WHOAMI_REG           0x0D
+#define FXOS8700CQ_CTRL_REG1            0x2A
+#define FXOS8700CQ_XYZ_DATA_CFG_REG     0x0E
+#define FXOS8700CQ_OUT_X_MSB_REG        0x01
+#define FXOS8700CQ_OUT_X_LSB_REG        0x02
+#define FXOS8700CQ_OUT_Y_MSB_REG        0x03
+#define FXOS8700CQ_OUT_Y_LSB_REG        0x04
+#define FXOS8700CQ_OUT_Z_MSB_REG        0x05
+#define FXOS8700CQ_OUT_Z_LSB_REG        0x06
+#define FXOS8700CQ_PL_STATUS_REG        0x10
+#define FXOS8700CQ_PL_CFG_REG           0x11
+#define FXOS8700CQ_PL_COUNT_REG         0x12
+#define FXOS8700CQ_PL_BF_ZCOMP_REG      0x13
+#define FXOS8700CQ_PL_THS_REG           0x14
+
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -60,7 +72,7 @@ static accelerometer_raw_data_t magnometer_data;
 static I2C_transcieve_t i2c_com;
 static uint8_t slave_address;
 static uint8_t register_address;
-static uint8_t buffer[ACCELEROMETER_DATA_PACK_LEN]; //Reading Buffer 
+static uint8_t buffer[FXOS8700CQ_DATA_PACK_LEN]; //Reading Buffer 
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -114,33 +126,28 @@ static accelerometer_error_t configuration(){
  ****************************************************************/
 
 	//Secuencia de configuracion del acelerometro
-	slave_address = ACCELEROMETER_SLAVE_ADDRESS;
+	slave_address = FXOS8700CQ_SLAVE_ADDRESS;
+	i2c_com.data = buffer;
 	i2c_com.callback = dummy;
 	i2c_com.data_size = 1;
+	register_address = FXOS8700CQ_CTRL_REG1;
 
-	register_address = ACCELEROMETER_CTRL_REG1;
-	i2c_com.data = buffer;
 	buffer[0] = 0x00;
 	while (!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
-	register_address = ACCELEROMETER_CTRL_REG1;
-	buffer[0] = 0x1F;
+	register_address = FXOS8700CQ_PL_CFG_REG;
+	buffer[0] = 0xC0;
 
 	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
-	register_address = ACCELEROMETER_M_CTRL_REG2;
-	buffer[0] = 0x20;
+	register_address = FXOS8700CQ_PL_COUNT_REG;
+	buffer[0] = 0x50;
 
 	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
-	register_address = ACCELEROMETER_XYZ_DATA_CFG;
+	register_address = FXOS8700CQ_CTRL_REG1;
 	buffer[0] = 0x01;
 	
-	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
-
-	register_address = ACCELEROMETER_CTRL_REG1;
-	buffer[0] = 0x0D;
-
 	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
 
 	return ACCELEROMETER_NO_ERROR;
@@ -153,11 +160,9 @@ static void handler(void){
  * reading and saving of the accelerometer and magnometer data 
  ****************************************************************/
 
-	slave_address = ACCELEROMETER_SLAVE_ADDRESS;
-	register_address = ACCELEROMETER_STATUS;
+	register_address = FXOS8700CQ_STATUS_REG;
+	i2c_com.data_size = FXOS8700CQ_DATA_PACK_LEN;
 	i2c_com.callback = save_data;
-	i2c_com.data_size = ACCELEROMETER_DATA_PACK_LEN;
-	i2c_com.data = buffer;
 
 	I2C_init_transcieve(slave_address,register_address,&i2c_com, true);
 }
