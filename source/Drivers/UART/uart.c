@@ -33,7 +33,7 @@ static	uint16_t first_2_send=0;		//puntero al principio del buffer para enviar
 static 	uint16_t last_2_send=0;			//puntero a la cola del buffer para enviar
 
 static bool rx_flag=false;
-char word_down[BUFFER_SIZE+20];
+char word_down[BUFFER_SIZE];
 
 //PCR congfig
 
