@@ -245,7 +245,7 @@ void download_word(void){
 			i++;
 		}
 
-		upload_word(UART_3,word_down,i);
+		//upload_word(UART_3,word_down,i); esto es solo si queres transmitir lo que queres enviar
 		rx_flag=false;
 	}
 
