@@ -28,7 +28,7 @@
 //============================================
 #if CLOUD==CLOUD_DANY
 
-IPAddress MqttServer(192,168,1,10);				        // MQTT server URL or IP
+IPAddress MqttServer(192,168,0,101);				        // MQTT server URL or IP
 const unsigned int MqttPort=1883; 					        // MQTT port (default 1883)
 const char MqttUser[]="itba.jacoby@gmail.com";		  // user name 
 const char MqttPassword[]="12345678";				        // user password
@@ -58,8 +58,8 @@ PubSubClient mqtt_client(wclient);
 //=====================================================================
 // WiFi credentials
 
-char ssid[] = "P.Martorell-2.4";
-char password[] = "22290726";   // Set password to "" for open networks
+char ssid[] = "Diaz Quincho";
+char password[] = "paconapo20";   // Set password to "" for open networks
 
 
 //char ssid[] = "NODE_RED";

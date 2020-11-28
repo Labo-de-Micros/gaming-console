@@ -15,7 +15,7 @@
 #include "I2C.h"
 #include "../../board.h"
 #include "MK64F12.h"
-#include <stddef.h>
+#include <stdint.h>
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -149,7 +149,9 @@ bool I2C_init_transcieve(uint8_t sl_address, uint8_t reg_address, I2C_transcieve
  * 							with.
  * @param register_address: Register address of the module to communicate
  * 							with
- * @param i2c_comm: Pointer to communication parameters.
+ * @param i2c_com: Pointer to communication parameters.
+ * @param read:  A boolean value to describe if the next transmission will
+ * 				be a TX or a RX.
  * @returns: true if communication started, false otherwise.
  ****************************************************************/
 	bool started = false;
