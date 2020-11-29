@@ -42,15 +42,12 @@ void App_Init (void){
 
 	timerInit();
 	ADC_init();
-	ADC_enable_interrupts(false);
 	return;
 }
 
 void App_Run (void){
-	ADC_select_trigger(ADC_SOFTWARE_TRIG);
-	ADC_set_callback(dummy1);
 	ADC_start_conversion();
-	while(!ADC_is_conversion_completed());
+	while(ADC_is_converting());
 	uint16_t hola = ADC_get_data();
 	return;
 }
