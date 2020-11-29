@@ -51,9 +51,6 @@ typedef enum
 
 } FTM_Prescal_t;
 
-
-
-
 #define FTM_CH_0 0
 #define FTM_CH_1 1
 #define FTM_CH_2 2
@@ -62,8 +59,6 @@ typedef enum
 #define FTM_CH_5 5
 #define FTM_CH_6 6
 #define FTM_CH_7 7
-
-
 
 
 typedef FTM_Type *FTM_t;

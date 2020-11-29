@@ -1,15 +1,5 @@
-/*
- * FTM.c
- *
- *  Created on: 2 oct. 2020
- *      Author: Ariel
- */
-
-
 #include "FTM.h"
 #include "../GPIO/gpio.h"
-
-
 
 void OVF_Init(void);
 void OVF_ISR(void);
@@ -28,9 +18,6 @@ void OVF_ISR(void)
 	//GPIO_Toggle(PTC, 1 << 8);
 
 }
-
-
-
 
 
 void FTM_Init (void)
