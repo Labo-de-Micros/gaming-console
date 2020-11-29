@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -75,5 +76,7 @@ bool I2C_init_transcieve(uint8_t sl_address, uint8_t reg_address, I2C_transcieve
  * 				be a TX or a RX.
  * @returns: true if communication started, false otherwise.
  ****************************************************************/
+
+bool I2C_is_transmitting(void);
 
 #endif	// _I2C_H_ 

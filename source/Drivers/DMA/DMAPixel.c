@@ -15,7 +15,7 @@
 #include "DMAPixel.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include "fsl_ftm_driver.h"
+//#include "fsl_ftm_driver.h"
 #include "fsl_edma_driver.h"
 #include "fsl_sim_hal_MK64F12.h"
 #include "fsl_mcg_hal.h"

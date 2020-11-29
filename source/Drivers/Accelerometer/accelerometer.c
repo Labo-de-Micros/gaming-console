@@ -106,7 +106,6 @@ void accelerometer_init(){
 /*****************************************************************
  * @brief Function to initialize accelerometer module
  ****************************************************************/
-
 	I2C_init(I2C_0);
 	configuration();
 	i2c_com.error = I2C_NO_ERROR;
@@ -133,22 +132,28 @@ static accelerometer_error_t configuration(){
 	register_address = FXOS8700CQ_CTRL_REG1;
 
 	buffer[0] = 0x00;
-	while (!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
+	I2C_init_transcieve(slave_address,register_address, &i2c_com, false);
+	while(I2C_is_transmitting());
 
 	register_address = FXOS8700CQ_PL_CFG_REG;
 	buffer[0] = 0xC0;
+	I2C_init_transcieve(slave_address,register_address, &i2c_com, false);
+	while(I2C_is_transmitting());
 
-	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
+	buffer[0] = 0x00;
+	register_address = 0x0D;
+	I2C_init_transcieve(slave_address,register_address, &i2c_com, true);
+	while(I2C_is_transmitting());
 
 	register_address = FXOS8700CQ_PL_COUNT_REG;
 	buffer[0] = 0x50;
-
-	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
+	I2C_init_transcieve(slave_address,register_address, &i2c_com, false);
+	while(I2C_is_transmitting());
 
 	register_address = FXOS8700CQ_CTRL_REG1;
 	buffer[0] = 0x01;
-	
-	while(!I2C_init_transcieve(slave_address,register_address, &i2c_com, false));
+	I2C_init_transcieve(slave_address,register_address, &i2c_com, false);
+	while(I2C_is_transmitting());
 
 	return ACCELEROMETER_NO_ERROR;
 }
@@ -159,12 +164,12 @@ static void handler(void){
  * @brief Accelerometer Handler, it performs the corresponding 
  * reading and saving of the accelerometer and magnometer data 
  ****************************************************************/
-
 	register_address = FXOS8700CQ_STATUS_REG;
 	i2c_com.data_size = FXOS8700CQ_DATA_PACK_LEN;
 	i2c_com.callback = save_data;
-
-	I2C_init_transcieve(slave_address,register_address,&i2c_com, true);
+	if(!I2C_is_transmitting())
+		I2C_init_transcieve(slave_address,register_address,&i2c_com, true);
+	return;
 }
 
 
@@ -181,6 +186,7 @@ static void save_data (void){
 	magnometer_data.x    =			 (buffer[7]  << 8) | buffer[8];
 	magnometer_data.y    =			 (buffer[9]  << 8) | buffer[10];
 	magnometer_data.z    =			 (buffer[11] << 8) | buffer[12];
+	return;
 }
 
 
