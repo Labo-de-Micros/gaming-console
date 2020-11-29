@@ -31,7 +31,7 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define ADC_MIN_DIGITAL_VALUE	0
+#define ADC_MIN_DIGITAL_VALUE	0x0000
 #define ADC_MAX_DIGITAL_VALUE	0xFFFF
 
 //////////////////////////////////////////////////////////////////
@@ -57,8 +57,6 @@ void ADC_init(void);
  *  			- Single ended conversion
  *  			- Input channel DADP0
  *  			- 16 bit conversion
- *  			- Max sample freq =~ 200kHz
- *  			- Continous Conversion
  *  			- Software trigger
  ****************************************************************/
 

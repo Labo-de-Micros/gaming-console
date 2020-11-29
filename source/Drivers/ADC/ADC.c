@@ -22,13 +22,16 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define SET_SC1_DIFF(x)		(ADC0->SC1[0] |= ADC_SC1_DIFF(x))
-#define SET_SC1_ADCH(x)		(ADC0->SC1[0] |= ADC_SC1_ADCH(x))
-#define SET_SC1_AIEN(x)		(ADC0->SC1[0] |= ADC_SC1_AIEN(x))
-#define SET_CFG1_MODE(x)	(ADC0->CFG1   |= ADC_CFG1_MODE(x))
-#define SET_CFG1_ADICLK(x)	(ADC0->CFG1 |= ADC_CFG1_ADICLK(x))
-#define SET_CFG1_ADIV(x)	(ADC0->CFG1 |= ADC_CFG1_ADIV(x))
-#define START_CALIBRATION	(ADC0->SC3 |= ADC_SC3_CAL_MASK)
+#define SET_SC1_DIFF(x)				(ADC0->SC1[0] |= ADC_SC1_DIFF(x))
+#define SET_SC1_ADCH(x)				(ADC0->SC1[0] |= ADC_SC1_ADCH(x))
+#define SET_SC1_AIEN(x)				(ADC0->SC1[0] |= ADC_SC1_AIEN(x))
+#define SET_CFG1_MODE(x)			(ADC0->CFG1   |= ADC_CFG1_MODE(x))
+#define SET_CFG1_ADICLK(x)			(ADC0->CFG1 |= ADC_CFG1_ADICLK(x))
+#define SET_CFG1_ADIV(x)			(ADC0->CFG1 |= ADC_CFG1_ADIV(x))
+#define START_CALIBRATION			(ADC0->SC3 |= ADC_SC3_CAL_MASK)
+#define SET_SC3_AVGE(x)				(ADC0->SC3 |= ADC_SC3_AVGE(x))
+#define SET_SC3_AVGS(x)				(ADC0->SC3 |= ADC_SC3_AVGS(x))
+#define READ_DATA					(ADC0->R[0])
 
 
 //////////////////////////////////////////////////////////////////
@@ -85,9 +88,9 @@ void ADC_init(void){
 
 	{	// SC3 Register configuration
 		START_CALIBRATION;
-		while(ADC0->SC3 & ADC_SC3_CALF_MASK);	// Wait for calibration to finish without failure
-		ADC0->SC3 |= ADC_SC3_AVGE_MASK;			// Enable Hardware Average
-		ADC0->SC3 |= ADC_SC3_AVGS(0b00);		// Set Hardware average to 4 conversions.
+		while(ADC0->SC3 & ADC_SC3_CALF_MASK);	// Wait for calibration to finish without failure (Checking CALF bit)
+		SET_SC3_AVGE(0b1);						// Enable Hardware Average
+		SET_SC3_AVGS(0b00);						// Set Hardware average to 4 conversions.
 	}
 	
 	ADC_select_trigger(ADC_SOFTWARE_TRIG);
@@ -123,7 +126,7 @@ uint16_t ADC_get_data(void){
  * @brief Function to get the conversion data.
  * @return uint16_t conversion value readed.
  ****************************************************************/
-	return (uint16_t)ADC0->R[0];
+	return READ_DATA;
 }
 
 void ADC_start_conversion(void){
@@ -131,8 +134,7 @@ void ADC_start_conversion(void){
  * @brief Function to start an ADC conversion (only works if software
  * 			trigger is selected).
  ****************************************************************/
-	/* Input channel select */
-	ADC0->SC1[0] &= ~ADC_SC1_ADCH_MASK;
+	ADC0->SC1[0] &= ~ADC_SC1_ADCH_MASK;		// Select Input channel
 	return;
 }
 
