@@ -16,6 +16,7 @@
 #include "../../board.h"
 #include "MK64F12.h"
 #include <stdint.h>
+#include <stddef.h>
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -70,7 +71,7 @@ static I2C_Type* i2cPtrs [] = I2C_BASE_PTRS;
 static uint32_t simMasks[] = {SIM_SCGC4_I2C0_MASK, SIM_SCGC4_I2C1_MASK, SIM_SCGC1_I2C2_MASK};
 static IRQn_Type i2c_irqs[] = I2C_IRQS;
 static I2C_Type* i2c;
-
+static bool transcieving;
 static I2C_transcieve_t * i2c_com;
 static I2C_STATE state;
 static I2C_MODE mode;
@@ -128,17 +129,20 @@ void I2C_init(I2C_channel_t channel){
 	i2c->C1 = 0x00; 							// Initialize the control register module in 0
 	i2c->C1 |= I2C_C1_IICEN_MASK; 				// Enable the I2C moudle operation
 	i2c->C1 |= I2C_C1_IICIE_MASK; 				// Enables I2C interrupts
-	//i2c->S = I2C_S_TCF_MASK | I2C_S_IICIF_MASK; //VER SI SE PUEDE BORRARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+	i2c->S = I2C_S_TCF_MASK | I2C_S_IICIF_MASK; //VER SI SE PUEDE BORRARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
 	
 	// Frequency Divider Register
-	i2c->F = I2C_F_MULT(0) | I2C_F_ICR(0); 		// Set the Multiple Factor in 1(00) and the ClockRate prescaler in 00
+	i2c->F = I2C_F_MULT(0b10) | I2C_F_ICR(0); 		// Set the Multiple Factor in 4(10) and the ClockRate prescaler in 00
 	// Pins configuration
 	port_SDA->PCR[pin_SDA] |= PORT_PCR_MUX(5); 	// Set I2C alternative
 	port_SDA->PCR[pin_SDA] |= PORT_PCR_ODE_MASK;// Set open drain enable (See page 1549 Reference manual.)
 	port_SCL->PCR[pin_SCL] |= PORT_PCR_MUX(5);	// Set I2C alternative
 	port_SCL->PCR[pin_SCL] |= PORT_PCR_ODE_MASK;// Set open drain enable
-
-	NVIC_EnableIRQ(i2c_irqs[channel]);			// Enable all interrupts from I2C
+	transcieving = false;
+	//NVIC_EnableIRQ(i2c_irqs[channel]);			// Enable all interrupts from I2C
+	NVIC_EnableIRQ(I2C0_IRQn);			// Enable all interrupts from I2C
+	NVIC_EnableIRQ(I2C1_IRQn);			// Enable all interrupts from I2C
+	NVIC_EnableIRQ(I2C2_IRQn);			// Enable all interrupts from I2C
 	return;
 }
 
@@ -155,7 +159,7 @@ bool I2C_init_transcieve(uint8_t sl_address, uint8_t reg_address, I2C_transcieve
  * @returns: true if communication started, false otherwise.
  ****************************************************************/
 	bool started = false;
-	if(I2C_CHECK_BUS != BUS_BUSY){
+	if(I2C_CHECK_BUS != BUS_BUSY && transcieving == false){
 		i2c_com = com;					// Save the I2C data.
 		slave_address = sl_address;
 		register_address = reg_address;
@@ -173,8 +177,13 @@ bool I2C_init_transcieve(uint8_t sl_address, uint8_t reg_address, I2C_transcieve
 		I2C_START_SIGNAL;			 						// Set Master Mode, sends a STARTF to the I2C
 		I2C_WRITE_BYTE((slave_address << 1) & 0b11111110);	// Write address slave to the bus with the R/W bit in 0.
 		started = true;
+		transcieving = true;
 	}
 	return started;
+}
+
+bool I2C_is_transmitting(void){
+	return transcieving;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -202,16 +211,18 @@ static void end_transcieve(I2C_error_t error){
 
 	if(i2c_com->callback != NULL)
 		i2c_com->callback();		// Call the callback anouncing that the transmission ended.
+	transcieving = false;
 	return;
 }
 
 static void handler(void){
 /*****************************************************************
- * @brief IRQ Handler for the I2C0,I2C1, I2C2 module, it performs 
+ * @brief IRQ Handler for the I2C0, I2C1, I2C2 module, it performs
  * 			the corresponding state machine for the selected mode of 
  * 			communication.
  ****************************************************************/
 	I2C_CLEAR_IRQ_FLAG;					// Clear interrupt flag.
+	uint8_t dummy_data;
 	if(mode == I2C_MODE_READ){			// Read mode state machine
 		switch(state){
 			case I2C_STATE_WRITE_REG_ADDRESS:
@@ -238,16 +249,16 @@ static void handler(void){
 					if(data_index == i2c_com->data_size-1){ 
 						I2C_SET_NACK;
 					}
-					uint8_t dummy_data = I2C_READ_BYTE;
+					dummy_data = I2C_READ_BYTE;
 				}
 				else
 					end_transcieve(I2C_SLAVE_ERROR);
 				break;
 			case I2C_STATE_READ_DATA:
-				if(data_index == i2c_com->data_size-1)
+				if(data_index == i2c_com->data_size-1)	//aCA DECIA -1
 					end_transcieve(I2C_NO_ERROR);
 				else {
-					if(data_index == i2c_com->data_size-2)
+					if(data_index == i2c_com->data_size-2) // Aca decia -2
 						I2C_SET_NACK;
 					i2c_com->data[data_index] = I2C_READ_BYTE;
 					data_index++;
