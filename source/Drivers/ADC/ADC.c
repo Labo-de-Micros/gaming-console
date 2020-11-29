@@ -32,7 +32,8 @@
 #define SET_SC3_AVGE(x)				(ADC0->SC3 |= ADC_SC3_AVGE(x))
 #define SET_SC3_AVGS(x)				(ADC0->SC3 |= ADC_SC3_AVGS(x))
 #define READ_DATA					(ADC0->R[0])
-
+#define GET_SC2_ADACT				(ADC0->SC2 & ADC_SC2_ADACT_MASK)
+#define 
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -106,7 +107,7 @@ bool ADC_is_converting(void){
  * @brief Function to check if the conversion process is active.
  * @return true if conversion process is active.
  ****************************************************************/
-	return (ADC0->SC2 & ADC_SC2_ADACT_MASK);
+	return GET_SC2_ADACT;
 }
 
 void ADC_select_trigger(ADC_trig_t trigger){
