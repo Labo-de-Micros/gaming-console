@@ -3,7 +3,7 @@
 //							Headers								//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-#include "./Drivers/Accelerometer/accelerometer.h"
+#include "./Drivers/Accelerometer/FXOS8700CQ.h"
 #include "./Drivers/Timer/timer.h"
 //#include "./Drivers/I2C/I2C.h"
 
@@ -29,7 +29,7 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static accelerometer_raw_data_t test;
+static FXOS8700CQ_raw_data_t test;
 
 
 ////////////////////////////////////////////////////////////////
@@ -51,8 +51,7 @@ static accelerometer_raw_data_t test;
 void App_Init (void){
 
 	timerInit();
-	timerDelay(TIMER_MS2TICKS(100));
-	accelerometer_init();
+	accelerometer_init(HYBRID_200);
 	return;
 }
 
@@ -60,7 +59,7 @@ void App_Run (void){
    
 	while(1){
 		timerDelay(TIMER_MS2TICKS(500));
-		test = accelerometer_get_data(ACCELEROMETER_ACCEL_DATA);
+		test = FXOS8700CQ_get_data(ACCELEROMETER_DATA);
 		return;
 	}
 }

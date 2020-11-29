@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-//	@file		accelerometer.h   								//
-//	@brief		Accelerometer implementation                    //
+//	@file		FXOS8700CQ.h   								//
+//	@brief		FXOS8700CQ implementation                    //
 //	@author		Grupo	4										//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#ifndef _ACCELEROMETER_H_
-#define _ACCELEROMETER_H_
+#ifndef _FXOS8700CQ_H_
+#define _FXOS8700CQ_H_
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -31,21 +31,27 @@
 //////////////////////////////////////////////////////////////////
 
 typedef enum{
-	ACCELEROMETER_CONFIG_ERROR,
-    ACCELEROMETER_READ_ERROR,
-	ACCELEROMETER_NO_ERROR
-}accelerometer_error_t;
+	FXOS8700CQ_CONFIG_ERROR,
+    FXOS8700CQ_READ_ERROR,
+	FXOS8700CQ_NO_ERROR
+}FXOS8700CQ_error_t;
+
+typedef enum{
+    STANDBY,
+	HYBRID_200
+}FXOS8700CQ_mode_t;
+
 
 typedef enum {
-    ACCELEROMETER_ACCEL_DATA, 
-    ACCELEROMETER_MAGN_DATA
-} accelerometer_data_options_t;
+    ACCELEROMETER_DATA, 
+    MAGNOMETER_DATA
+} FXOS8700CQ_data_options_t;
 
 typedef struct {
 	int16_t x;
 	int16_t y;
 	int16_t z;
-} accelerometer_raw_data_t;
+} FXOS8700CQ_raw_data_t;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -53,17 +59,17 @@ typedef struct {
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void accelerometer_init();
+void FXOS8700CQ_init(FXOS8700CQ_mode_t mode);
 /*****************************************************************
  * @brief Function to initialize accelerometer module
  ****************************************************************/
 
-accelerometer_raw_data_t accelerometer_get_data(accelerometer_data_options_t data_option);
+FXOS8700CQ_raw_data_t FXOS8700CQ_get_data(FXOS8700CQ_data_options_t data_option);
 
 /*****************************************************************
  * @brief Function to get accelerometer or magnometer data
  * @param data_option: Data option can be accelerometer or magnometer
- * @returns accelerometer_raw_data_t: Struct with the x,y,z variables.
+ * @returns FXOS8700CQ_raw_data_t: Struct with the x,y,z variables.
  ****************************************************************/
 
-#endif // _ACCELEROMETER_H_ 
+#endif // _FXOS8700CQ_H_ 
