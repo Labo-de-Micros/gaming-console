@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-#include "FTM.h"
-#include "../GPIO/gpio.h"
-
-void OVF_Init(void);
-void OVF_ISR(void);
-=======
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 //	@file		FTM.c    									   //
@@ -57,12 +50,11 @@ static PWM_callback_t PWM_ISR;
 //					FUNCTION DEFINITIONS						//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
->>>>>>> 27f5ad44e42e788cc92d7514b27678730d2fdccb
 
 /* FTM0 fault, overflow and channels interrupt handler*/
 __ISR__ FTM0_IRQHandler(void)
 {
-	PWM_ISR();
+	if (PWM_ISR!=NULL) PWM_ISR();
 }
 
 // void PWM_ISR (void)
@@ -81,7 +73,7 @@ __ISR__ FTM0_IRQHandler(void)
 // }
 
 
-void FTM_Init(FTM_t ftm, PWM_callback_t PWM_callback){
+void FTM_Init(FTM_t ftm){
 	if(ftm == FTM0){
 		SIM->SCGC6 |= SIM_SCGC6_FTM0_MASK;
 		NVIC_EnableIRQ(FTM0_IRQn);
@@ -104,10 +96,14 @@ void FTM_Init(FTM_t ftm, PWM_callback_t PWM_callback){
 		FTM3->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
 	}
 	//PWM_Init(10000-1,FTM_PSC_x32,70);
-	PWM_ISR = PWM_callback;
+	PWM_ISR = NULL;
 	return;
 }
 
+void FTM_SetISRCallback(PWM_callback_t callback){
+	PWM_ISR=callback;
+	return;
+}
 
 // void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)
 // {
@@ -116,15 +112,6 @@ void FTM_Init(FTM_t ftm, PWM_callback_t PWM_callback){
 // 	PWM_duty=duty;
 // 	//seteo los contadores
 
-<<<<<<< HEAD
-void FTM_Init (void)
-{
-	SIM->SCGC6 |= SIM_SCGC6_FTM0_MASK;
-	SIM->SCGC6 |= SIM_SCGC6_FTM1_MASK;
-	SIM->SCGC6 |= SIM_SCGC6_FTM2_MASK;
-	SIM->SCGC3 |= SIM_SCGC3_FTM2_MASK;
-	SIM->SCGC3 |= SIM_SCGC3_FTM3_MASK;
-=======
 // 	FTM0->CNTIN = 0X00;
 // 	FTM0->MOD = FTM_MOD_MOD(PWM_modulus);
 
@@ -136,7 +123,6 @@ void FTM_Init (void)
 // 	//	PORT_Configure2 (PORTC,1,UserPCR);
 
 // 	FTM0->CNT = 0X00;
->>>>>>> 27f5ad44e42e788cc92d7514b27678730d2fdccb
 
 
 // 	FTM_SetPrescaler(FTM0, prescaler);

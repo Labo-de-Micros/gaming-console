@@ -84,16 +84,6 @@ typedef enum
 
 } FTM_Prescal_t;
 
-<<<<<<< HEAD
-#define FTM_CH_0 0
-#define FTM_CH_1 1
-#define FTM_CH_2 2
-#define FTM_CH_3 3
-#define FTM_CH_4 4
-#define FTM_CH_5 5
-#define FTM_CH_6 6
-#define FTM_CH_7 7
-=======
 typedef enum
 {
 	FTM_0,
@@ -107,15 +97,9 @@ typedef void (*PWM_callback_t)(void);
 typedef FTM_Type *FTM_t;
 
 typedef uint16_t FTMData_t;
->>>>>>> 27f5ad44e42e788cc92d7514b27678730d2fdccb
 
 typedef uint32_t FTMChannel_t; /* FTM0/FTM3: Channel 1-8; FTM1/FTM2: Channel 1-2 */
 
-<<<<<<< HEAD
-typedef FTM_Type *FTM_t;
-typedef uint16_t FTMData_t;
-typedef uint32_t FTMChannel_t; /* FTM0/FTM3: Channel 1-8; FTM1/FTM2: Channel 1-2 */
-=======
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -123,14 +107,13 @@ typedef uint32_t FTMChannel_t; /* FTM0/FTM3: Channel 1-8; FTM1/FTM2: Channel 1-2
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
->>>>>>> 27f5ad44e42e788cc92d7514b27678730d2fdccb
 
 //__ISR__ 	FTM0_IRQHandler					 (void);
 //__ISR__ 	FTM1_IRQHandler					 (void);
 //__ISR__ 	FTM2_IRQHandler					 (void);
 //__ISR__ 	FTM3_IRQHandler					 (void);
 
-void 		FTM_Init 						 (FTM_t, PWM_callback_t);
+void 		FTM_Init 						 (FTM_t);
 
 void        FTM_SetPrescaler 				 (FTM_t, FTM_Prescal_t);
 void     	FTM_SetModulus 					 (FTM_t, FTMData_t);
@@ -158,6 +141,8 @@ FTMData_t   FTM_GetCounter 					 (FTM_t, FTMChannel_t);
 void 		FTM_SetInterruptMode   			 (FTM_t, FTMChannel_t, bool);
 bool 		FTM_IsInterruptPending 			 (FTM_t, FTMChannel_t);
 void 		FTM_ClearInterruptFlag 			 (FTM_t, FTMChannel_t);
+
+void 		FTM_SetISRCallback					(PWM_callback_t callback);
 
 //void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent);
 //set the PWM duty_cicly percentage
