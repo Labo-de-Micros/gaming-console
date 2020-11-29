@@ -51,7 +51,7 @@ static FXOS8700CQ_raw_data_t test;
 void App_Init (void){
 
 	timerInit();
-	accelerometer_init(HYBRID_200);
+	FXOS8700CQ_init(HYBRID_200);
 	return;
 }
 
@@ -60,8 +60,8 @@ void App_Run (void){
 	while(1){
 		timerDelay(TIMER_MS2TICKS(500));
 		test = FXOS8700CQ_get_data(ACCELEROMETER_DATA);
-		return;
 	}
+	return;
 }
 
 //////////////////////////////////////////////////////////////////

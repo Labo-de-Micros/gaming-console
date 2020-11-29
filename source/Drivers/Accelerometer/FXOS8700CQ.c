@@ -123,7 +123,7 @@ void FXOS8700CQ_init(FXOS8700CQ_mode_t mode){
 
 	timerInit();
 	timer_id = timerGetId();
-	timerStart(timer_id,TIMER_MS2TICKS(1000),TIM_MODE_PERIODIC,handler);
+	timerStart(timer_id,TIMER_MS2TICKS(50),TIM_MODE_PERIODIC,handler);
 	return;
 }
 
@@ -183,7 +183,7 @@ static FXOS8700CQ_error_t configuration(){
 
 	}
 
-	return;
+	return FXOS8700CQ_NO_ERROR;
 }
 
 
@@ -231,7 +231,7 @@ static void save_data (void){
 }
 
 
-FXOS8700CQ_raw_data_t accelerometer_get_data(FXOS8700CQ_data_options_t data_option){
+FXOS8700CQ_raw_data_t FXOS8700CQ_get_data(FXOS8700CQ_data_options_t data_option){
 /*****************************************************************
  * @brief Function to get accelerometer or magnometer data
  * @param data_option: Data option can be accelerometer or magnometer
