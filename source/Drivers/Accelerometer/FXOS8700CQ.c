@@ -55,8 +55,8 @@
 #define FXOS8700CQ_PL_BF_ZCOMP_REG      0x13
 #define FXOS8700CQ_PL_THS_REG           0x14
 
-
-
+#define ACCEL_MG_LSB_4G (0.000488F)
+#define SENSORS_GRAVITY_STANDARD (9.8F)
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
@@ -223,6 +223,12 @@ static void save_data (void){
 	accelerometer_data.x = (int16_t)((buffer[1]  << 8) | buffer[2])	>> 2;
 	accelerometer_data.y = (int16_t)((buffer[3]  << 8) | buffer[4])	>> 2;
 	accelerometer_data.z = (int16_t)((buffer[5]  << 8) | buffer[6])	>> 2;
+
+
+    accelerometer_data.x *= ACCEL_MG_LSB_4G * SENSORS_GRAVITY_STANDARD;
+    accelerometer_data.y *= ACCEL_MG_LSB_4G * SENSORS_GRAVITY_STANDARD;
+    accelerometer_data.z *= ACCEL_MG_LSB_4G * SENSORS_GRAVITY_STANDARD;
+
 
 	magnometer_data.x    =			 (buffer[7]  << 8) | buffer[8];
 	magnometer_data.y    =			 (buffer[9]  << 8) | buffer[10];
