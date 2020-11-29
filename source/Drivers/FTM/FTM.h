@@ -113,7 +113,7 @@ typedef uint32_t FTMChannel_t; /* FTM0/FTM3: Channel 1-8; FTM1/FTM2: Channel 1-2
 //__ISR__ 	FTM2_IRQHandler					 (void);
 //__ISR__ 	FTM3_IRQHandler					 (void);
 
-void 		FTM_Init 						 (FTM_t, PWM_callback_t);
+void 		FTM_Init 						 (FTM_t);
 
 void        FTM_SetPrescaler 				 (FTM_t, FTM_Prescal_t);
 void     	FTM_SetModulus 					 (FTM_t, FTMData_t);
@@ -141,6 +141,8 @@ FTMData_t   FTM_GetCounter 					 (FTM_t, FTMChannel_t);
 void 		FTM_SetInterruptMode   			 (FTM_t, FTMChannel_t, bool);
 bool 		FTM_IsInterruptPending 			 (FTM_t, FTMChannel_t);
 void 		FTM_ClearInterruptFlag 			 (FTM_t, FTMChannel_t);
+
+void 		FTM_SetISRCallback					(PWM_callback_t callback);
 
 //void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent);
 //set the PWM duty_cicly percentage

@@ -54,7 +54,7 @@ static PWM_callback_t PWM_ISR;
 /* FTM0 fault, overflow and channels interrupt handler*/
 __ISR__ FTM0_IRQHandler(void)
 {
-	PWM_ISR();
+	if (PWM_ISR!=NULL) PWM_ISR();
 }
 
 // void PWM_ISR (void)
@@ -73,7 +73,7 @@ __ISR__ FTM0_IRQHandler(void)
 // }
 
 
-void FTM_Init(FTM_t ftm, PWM_callback_t PWM_callback){
+void FTM_Init(FTM_t ftm){
 	if(ftm == FTM0){
 		SIM->SCGC6 |= SIM_SCGC6_FTM0_MASK;
 		NVIC_EnableIRQ(FTM0_IRQn);
@@ -96,10 +96,14 @@ void FTM_Init(FTM_t ftm, PWM_callback_t PWM_callback){
 		FTM3->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
 	}
 	//PWM_Init(10000-1,FTM_PSC_x32,70);
-	PWM_ISR = PWM_callback;
+	PWM_ISR = NULL;
 	return;
 }
 
+void FTM_SetISRCallback(PWM_callback_t callback){
+	PWM_ISR=callback;
+	return;
+}
 
 // void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)
 // {
