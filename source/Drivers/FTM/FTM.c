@@ -149,9 +149,6 @@ void FTM_SetISRCallback(PWM_callback_t callback){
 
 // }
 
-
-
-
 // Setters
 
 void FTM_SetPrescaler (FTM_t ftm, FTM_Prescal_t data)
@@ -194,6 +191,10 @@ bool FTM_IsOverflowPending (FTM_t ftm)
 void FTM_ClearOverflowFlag (FTM_t ftm)
 {
 	ftm->SC &= ~FTM_SC_TOF_MASK;
+}
+
+void FTM_SetPSC(FTM_t ftm, uint16_t PSC){
+	ftm->SC = (ftm->SC & ~FTM_SC_PS_MASK) | FTM_SC_PS(PSC);
 }
 
 void FTM_SetWorkingMode (FTM_t ftm, FTMChannel_t channel, FTMMode_t mode)
