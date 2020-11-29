@@ -61,12 +61,20 @@ void ADC_init(void){
 	ya_init = true;
 	adc = ADC0;
 	SIM->SCGC6 |= SIM_SCGC6_ADC0_MASK;		// Clock Gating.
+	
 	{	// SC1 Register configuration
-		ADC0->SC1[0] &= ~ADC_SC1_ADCH_MASK;	// Select input channel
-		ADC0->SC1[0] |= ADC_SC1_AIEN_MASK;	// Enable COCO Interrupt
+		ADC0->SC1[0] |= ADC_SC1_DIFF(0);			// Single ended conversion
+		//ADC0->SC1[0] &= ~ADC_SC1_ADCH_MASK;	// Select input channel
+		ADC0->SC1[0] |= ADC_SC1_ADCH(0b00000);	// Select input channel as DADP0
+		ADC0->SC1[0] |= ADC_SC1_AIEN(1);			// Enable COCO Interrupt (COnversion COmpleted Interrupts)
 	}
 
-	ADC0->CFG1 |= ADC_CFG1_MODE_MASK;		// Set mode 11 -> 16-bit conversion
+	{	// CFG1 Register Configuration
+		ADC0->CFG1 |= ADC_CFG1_MODE(0b11);		// Set mode 11 -> 16-bit conversion
+		ADC0->CFG1 |= ADC_CFG1_ADICLK(0b00);	// Select Bus Clock
+		ADC0->CFG1 |= ADC_CFG1_ADIV(0b11);		// Select Divide ratio to 8. (Al parecer las interrupciones venian demasiado rapido)
+	}
+
 	{	// SC3 Register configuration
 		ADC0->SC3 |= ADC_SC3_CAL_MASK;		// Start calibration
 		while(ADC0->SC3 & ADC_SC3_CALF_MASK);	// Wait for calibration to finish without failure
@@ -74,7 +82,7 @@ void ADC_init(void){
 		ADC0->SC3 |= ADC_SC3_AVGS(0b00);	// Set Hardware average to 4 conversions.
 	}
 
-		// Enable Interrupts
+	// Enable Interrupts
 	NVIC_ClearPendingIRQ(ADC0_IRQn);
 	NVIC_EnableIRQ(ADC0_IRQn);
 	return;
