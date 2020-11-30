@@ -59,6 +59,10 @@ static PORT_Type* portPtrs[] = PORT_BASE_PTRS;
 /* FTM0 fault, overflow and channels interrupt handler*/
 __ISR__ FTM0_IRQHandler(void)
 {
+	uint32_t status;
+	status = FTM0->STATUS; //Capturo flags de interrupcion de todos los canales
+
+	FTM0->STATUS = 0;	//Limpio todos los flags
 	if (PWM_ISR!=NULL) PWM_ISR();
 }
 
