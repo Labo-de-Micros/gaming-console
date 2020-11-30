@@ -114,13 +114,10 @@ void FXOS8700CQ_init(FXOS8700CQ_mode_t mode){
  ****************************************************************/
 	I2C_init(I2C_0);
 	FXOS8700CQ_mode = mode;
-	configuration();
-	i2c_com.error = I2C_NO_ERROR;
-
-
-	slave_address = FXOS8700CQ_SLAVE_ADDRESS;
 	i2c_com.data = buffer;
-
+	i2c_com.error = I2C_NO_ERROR;
+	slave_address = FXOS8700CQ_SLAVE_ADDRESS;
+	configuration();
 	timerInit();
 	timer_id = timerGetId();
 	timerStart(timer_id,TIMER_MS2TICKS(50),TIM_MODE_PERIODIC,handler);

@@ -54,12 +54,6 @@ void ADC_init(void);
  *  			- Software trigger
  ****************************************************************/
 
-void ADC_select_trigger(ADC_trig_t trigger);
-/*****************************************************************
- * @brief Function to select the trigger source for the ADC.
- * @param trigger Type of trigger to select.
- ****************************************************************/
-
 void ADC_start_conversion(void);
 /*****************************************************************
  * @brief Function to start an ADC conversion (only works if software
@@ -76,6 +70,12 @@ bool ADC_is_converting(void);
 /*****************************************************************
  * @brief Function to check if the conversion process is active.
  * @return true if conversion process is active.
+ ****************************************************************/
+
+void ADC_select_trigger(ADC_trig_t trigger);
+/*****************************************************************
+ * @brief Function to select the trigger source for the ADC.
+ * @param trigger Type of trigger to select.
  ****************************************************************/
 
 // void ADC_DMA_enable(bool enable);
