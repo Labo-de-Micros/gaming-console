@@ -4,8 +4,8 @@
 #include "../FTM/ftm.h"
 #include "../Timer/timer.h"
 
-#define CNV_ON 39 //39 ticks -> 0.8us
-#define CNV_OFF 22 //22 ticks -> 0.46us
+#define CNV_ON 		39 //39 ticks -> 0.8us
+#define CNV_OFF 	22 //22 ticks -> 0.46us
 #define CNV_ZERO 0
 #define MOD 62//62ticks ->1.26us
 
@@ -153,13 +153,13 @@ void led_m_init()
 
 	FTM_Init(FTM0);
 	FTM_SetModulus(FTM0,MOD);
+	FTM_SetDMA(FTM0, 0, 1);
 	FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
 	FTM_SetPulseWidthModulationLogic(FTM0,0,FTM_lAssertedHigh);
 	FTM_SetInterruptMode (FTM0, 0, 1);
-	FTM_SetDMA(FTM0, 0, 1);
 	FTM_SetCounter (FTM0,0,CNV_OFF);
 	FTM_SetPSC(FTM0, FTM_PSC_x1);
-	
+
 	FTM_StartClock(FTM0);
 
 	return;

@@ -86,7 +86,7 @@ void FTM_Init(FTM_t ftm){
 	if(ftm == FTM0){
 		SIM->SCGC6 |= SIM_SCGC6_FTM0_MASK;
 		NVIC_EnableIRQ(FTM0_IRQn);
-		//FTM0->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
+		FTM0->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
 	}
 	else if(ftm == FTM1){
 		SIM->SCGC6 |= SIM_SCGC6_FTM1_MASK;
@@ -292,7 +292,8 @@ void FTM_ClearInterruptFlag (FTM_t ftm, FTMChannel_t channel)
 
 void FTM_SetDMA(FTM_t ftm, FTMChannel_t channel, bool mode)
 {
-	ftm->CONTROLS[channel].CnSC = (ftm->CONTROLS[channel].CnSC & ~(FTM_CnSC_DMA_MASK)) | (FTM_CnSC_DMA(mode));
+	//ftm->CONTROLS[channel].CnSC = (ftm->CONTROLS[channel].CnSC & ~(FTM_CnSC_DMA_MASK)) | (FTM_CnSC_DMA(mode));
+	ftm->CONTROLS[channel].CnSC |= FTM_CnSC_DMA(0b1);
 }
 
 // void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent)

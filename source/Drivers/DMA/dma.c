@@ -137,6 +137,7 @@ void dma0_enable_erq(){
 
 static void DMA_IRQHandler(uint8_t channel_number)
 {
+	DMA0->CINT |= 0;
 	DMA_Type * dma = DMA0;
 	if (callbacks[channel_number] != NULL) {
 		callbacks[channel_number]();
