@@ -275,29 +275,30 @@ void ParseTopic(char* topic, char * payload, unsigned int length)
   {
     //debug_message("%s",payload);
     //parsear por cada boton que hay y despues mandar por uart
+    //los botones distintos al brillo arrancan desde el 110
       if(!strcmp(payload,"rotate"))
       {
-         Serial.write('R');
+         Serial.write(110);
       }
       else if(!strcmp(payload,"push-down"))
       {
-         Serial.write('A');
+         Serial.write(111);
       }
       else if(!strcmp(payload,"move left"))
       {
-         Serial.write('I');
+         Serial.write(112);
       }          
       else if(!strcmp(payload,"move right"))
       {
-         Serial.write('D');
+         Serial.write(113);
       }
       else if(!strcmp(payload,"enter"))
       {
-         Serial.write('E');
+         Serial.write(114);
       }
       else if(!strcmp(payload,"escape"))
       {
-         Serial.write('C');
+         Serial.write(115);
       }
               
   }
