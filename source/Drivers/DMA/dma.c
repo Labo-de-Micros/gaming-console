@@ -97,7 +97,7 @@ void dma_set_config_channel(dma_conf_t config){
 		}
 
 		if(config.major_loop_int_enable)
-			dma->TCD[config.dma_mux_conf.channel_number].CSR |= DMA_CSR_INTMAJOR_MASK;
+			dma->TCD[config.dma_mux_conf.channel_number].CSR = DMA_CSR_INTMAJOR_MASK;
 			
 
 			
@@ -124,6 +124,9 @@ void dma_enable_major_loop_irq(uint8_t channel_number, bool ie)
     return;
 }
 
+void dma0_enable_erq(){
+	DMA0->ERQ = DMA_ERQ_ERQ0_MASK;
+}
 
 
 //////////////////////////////////////////////////////////////////
@@ -165,6 +168,7 @@ static void dma_change_erq_flag(int channel_number, bool value){
 	}
     return;
 }
+
 
 
 void DMA0_IRQHandler(void)

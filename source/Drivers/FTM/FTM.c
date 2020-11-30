@@ -292,7 +292,7 @@ void FTM_ClearInterruptFlag (FTM_t ftm, FTMChannel_t channel)
 
 void FTM_SetDMA(FTM_t ftm, FTMChannel_t channel, bool mode)
 {
-	ftm->CONTROLS[channel].CnSC = ftm->CONTROLS[channel].CnSC & ~(FTM_CnSC_DMA_MASK)) | (FTM_CnSC_DMA(mode));
+	ftm->CONTROLS[channel].CnSC = (ftm->CONTROLS[channel].CnSC & ~(FTM_CnSC_DMA_MASK)) | (FTM_CnSC_DMA(mode));
 }
 
 // void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent)

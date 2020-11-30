@@ -58,5 +58,6 @@ void dma_init();
 void dma_set_config_channel(dma_conf_t config);
 bool dma_get_finished_transfer(int channel);
 void dma_enable_major_loop_irq(uint8_t channel_number, bool ie);
+void dma0_enable_erq();
 
 #endif /* DMA_DMA_H_ */

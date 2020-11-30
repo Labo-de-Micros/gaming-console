@@ -82,6 +82,20 @@ void led_m_init()
     dma_init();
     dma_conf_t config;
     
+    for(uint16_t i = 0; i < CANT_LEDS+CANT_LEDS_ZERO; i++)
+    {
+    		if(i < CANT_LEDS)
+    		{
+    			led_m_set_pixel_brightness(led_matrix[i].R, 255);
+    			led_m_set_pixel_brightness(led_matrix[i].G, 255);
+    			led_m_set_pixel_brightness(led_matrix[i].B, 255);
+    		}
+    }
+
+    led_m_set_pixel_brightness(led_matrix[1].R, 255);
+    led_m_set_pixel_brightness(led_matrix[1].G, 255);
+    led_m_set_pixel_brightness(led_matrix[1].B, 255);
+
 	timerInit();
 	timerid = timerGetId();
 	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
@@ -135,6 +149,7 @@ void led_m_init()
     config.callback=_callback;
 
 	dma_set_config_channel(config);
+	dma0_enable_erq();
 
 	FTM_Init(FTM0);
 	FTM_SetModulus(FTM0,MOD);
