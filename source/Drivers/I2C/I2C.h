@@ -78,5 +78,10 @@ bool I2C_init_transcieve(uint8_t sl_address, uint8_t reg_address, I2C_transcieve
  ****************************************************************/
 
 bool I2C_is_transmitting(void);
+/*****************************************************************
+ * @brief Function to check if the I2C module is currently transmitting
+ * 			a massage.
+ * @returns - true if I2C module is transmitting, false otherwise.
+ ****************************************************************/
 
 #endif	// _I2C_H_ 
