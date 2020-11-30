@@ -156,6 +156,7 @@ void led_m_init()
 	FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
 	FTM_SetPulseWidthModulationLogic(FTM0,0,FTM_lAssertedHigh);
 	FTM_SetInterruptMode (FTM0, 0, 1);
+	FTM_SetDMA(FTM0, 0, 1);
 	FTM_SetCounter (FTM0,0,CNV_OFF);
 	FTM_SetPSC(FTM0, FTM_PSC_x1);
 	
