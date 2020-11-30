@@ -20,8 +20,7 @@
 #define FTM_CH 0
 #define DMA_CH 0
 
-#define ROW_SIZE 8
-#define COL_SIZE 8
+
 
 #define CANT_LEDS ROW_SIZE*COL_SIZE
 
@@ -71,17 +70,7 @@ static led_m_brightness_t led_m_brightness;
 static GRB_t led_matrix [CANT_LEDS];
 static led_m_color_t color_matrix [CANT_LEDS];
 
-static led_m_color_t
-White = {255,255,255},
-Black = {0,0,0},
-Red = {255,0,0},
-Green = {0,255,0},
-Blue = {0,0,255},
-Brown = {0x1b,0x3c,0},
-Gray = {192,192,192},
-Yellow = {255,255,0},
-Crimson = {80,0,0},
-Purple = {153,0,255};
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
