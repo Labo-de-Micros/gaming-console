@@ -232,13 +232,13 @@ void upload_word(UART_type_t id,char * word, uint16_t can){
 
 }
 
-void download_word(void){
+void download_word(int len){
 
 	uint8_t i = 0;
 
 	if(rx_flag){
 
-		while( first_recived != last_recived)
+		while(( first_recived != last_recived) && (i < len)) 	//hasta que igualo los punteros o hasta la cantidad de palabras deseadas
 		{
 			word_down[i]=buffer_recived[first_recived];
 			first_recived= (first_recived + 1) % BUFFER_SIZE;
