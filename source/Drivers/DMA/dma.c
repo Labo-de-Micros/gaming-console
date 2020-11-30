@@ -2,7 +2,7 @@
 #include "MK64F12.h"
 #include "../FTM/ftm.h"
 #include <stdlib.h>
-
+#include <string.h>
 
 
 //////////////////////////////////////////////////////////////////
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static void dma_change_erq_flag(int channel_number, bool value);
+
 static void DMA_IRQHandler(uint8_t channel_number);
 
 
@@ -186,14 +186,4 @@ void DMA15_IRQHandler(void)
 	DMA_IRQHandler(15);
 }
 
-static uint8_t _ftm_to_source_id(FTM_t ftm, FTMChannel_t channel)
-{
- 	uint8_t ret = 20;
 
-	if(ftm==FTM0)  ret += channel;
-	if(ftm==FTM1)  ret += 8 + channel; 
-	if(ftm==FTM2)  ret += 10 + channel; 
-	if(ftm==FTM3)  ret += 12 + channel;
-  
-  	return ret;
-}

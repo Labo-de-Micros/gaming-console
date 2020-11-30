@@ -49,7 +49,7 @@ typedef struct
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static uint8_t _ftm_to_source_id(FTM_t ftm, FTMChannel_t channel);
+static uint8_t ftm_to_source_id(FTM_t ftm, FTMChannel_t channel);
 static void tim_cb(void);
 static void dma_cb(void);
 
@@ -120,7 +120,7 @@ void led_m_init()
 
 		dma_init();
 
-		DMAMUX->CHCFG[DMA_CH] = DMAMUX_CHCFG_ENBL(1) | DMAMUX_CHCFG_TRIG(0) | DMAMUX_CHCFG_SOURCE(_ftm_to_source_id(FTM0, FTM_CH));
+		DMAMUX->CHCFG[DMA_CH] = DMAMUX_CHCFG_ENBL(1) | DMAMUX_CHCFG_TRIG(0) | DMAMUX_CHCFG_SOURCE(ftm_to_source_id(FTM0, FTM_CH));
 
 		NVIC_ClearPendingIRQ(DMA0_IRQn);
 		NVIC_EnableIRQ(DMA0_IRQn);
@@ -150,7 +150,6 @@ void led_m_init()
 
 		dma_assoc_callback_to_channel(DMA_CH, dma_cb);
 
-
 		led_m_set_pixel_brightness(led_matrix[1].R, 255);
 		led_m_set_pixel_brightness(led_matrix[1].G, 255);
 		led_m_set_pixel_brightness(led_matrix[1].B, 255);
@@ -168,11 +167,11 @@ void led_m_init()
 		SIM->SCGC5 |= SIM_SCGC5_PORTD_MASK;
 		SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
 	
-		PORT_ClearPortFlags(PORTA);
-		PORT_ClearPortFlags(PORTB);
-		PORT_ClearPortFlags(PORTC);
-		PORT_ClearPortFlags(PORTD);
-		PORT_ClearPortFlags(PORTE);
+		PORTA->ISFR = PORT_ISFR_ISF_MASK;
+		PORTB->ISFR = PORT_ISFR_ISF_MASK;
+		PORTC->ISFR = PORT_ISFR_ISF_MASK;
+		PORTD->ISFR = PORT_ISFR_ISF_MASK;
+		PORTE->ISFR = PORT_ISFR_ISF_MASK;
 	
 		NVIC_EnableIRQ(PORTA_IRQn);
 		NVIC_EnableIRQ(PORTB_IRQn);
@@ -184,10 +183,11 @@ void led_m_init()
 
 		FTM_Init(FTM0);
 		FTM_SetModulus(FTM0,MOD);
-		FTM_SetDMA(FTM0, 0, 1);
+
 		FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
 		FTM_SetPulseWidthModulationLogic(FTM0,0,FTM_lAssertedHigh);
 		FTM_SetInterruptMode (FTM0, 0, 1);
+		FTM_SetDMA(FTM0, 0, 1);
 		FTM_SetCounter (FTM0,0,CNV_OFF);
 		FTM_SetPSC(FTM0, FTM_PSC_x1);
 
@@ -219,4 +219,16 @@ static void dma_cb(void)
 {
 	FTM_StopClock(FTM0);
 	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
+}
+
+static uint8_t ftm_to_source_id(FTM_t ftm, FTMChannel_t channel)
+{
+ 	uint8_t ret = 20;
+
+	if(ftm==FTM0)  ret += channel;
+	if(ftm==FTM1)  ret += 8 + channel;
+	if(ftm==FTM2)  ret += 10 + channel;
+	if(ftm==FTM3)  ret += 12 + channel;
+
+  	return ret;
 }

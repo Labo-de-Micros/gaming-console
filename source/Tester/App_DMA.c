@@ -44,13 +44,14 @@
 
 void App_Init (void){
 	led_m_init();
+	led_m_set_pixel(1, 255, 2, 2);
 	return;
 }
 
 void App_Run(void){
 
 	while(true)
-		led_m_set_pixel(1, 255, 2, 2);
+		{}
 	return;
 }
 
