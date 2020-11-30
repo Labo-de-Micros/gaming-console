@@ -1,4 +1,4 @@
-#include <DMA/dma.h>
+#include "dma.h"
 #include "MK64F12.h"
 #include <stdlib.h>
 
@@ -91,8 +91,8 @@ void dma_set_config_channel(dma_conf_t config){
 		dma->TCD[config.dma_mux_conf.channel_number].ATTR |= DMA_ATTR_SMOD(config.smod) | DMA_ATTR_DMOD(config.dmod);
 
 		if (config.callback != NULL) {
-			//NVIC_ClearPendingIRQ(DMA0_IRQn);
-			NVIC_EnableIRQ(DMA0_IRQn+config.dma_mux_conf.channel_number);
+			NVIC_ClearPendingIRQ(DMA0_IRQn);
+			NVIC_EnableIRQ(DMA0_IRQn);//+config.dma_mux_conf.channel_number);
 			callbacks[config.dma_mux_conf.channel_number] = config.callback;
 		}
 
@@ -146,7 +146,7 @@ static void dma_mux_init(dma_mux_conf_t config){
 	if(!(config.channel_number >= DMA_AMOUNT_CHANNELS)){
 	    DMAMUX_Type* dma_mux = DMAMUX;
 	    dma_mux->CHCFG[config.channel_number] = 0x00;
-	    dma_mux->CHCFG[config.channel_number] = DMAMUX_CHCFG_ENBL(config.dma_enable) | DMAMUX_CHCFG_TRIG(config.trigger_enable) | DMAMUX_CHCFG_SOURCE(config.source);
+	    dma_mux->CHCFG[config.channel_number] = DMAMUX_CHCFG_ENBL(config.dma_enable) | DMAMUX_CHCFG_SOURCE(config.source);// | DMAMUX_CHCFG_TRIG(config.trigger_enable);
     }
     return;
 }
@@ -166,7 +166,7 @@ static void dma_change_erq_flag(int channel_number, bool value){
     return;
 }
 
-/*
+
 void DMA0_IRQHandler(void)
 {
 	DMA_IRQHandler(0);
@@ -246,4 +246,4 @@ void DMA15_IRQHandler(void)
 {
 	DMA_IRQHandler(15);
 }
-*/
+

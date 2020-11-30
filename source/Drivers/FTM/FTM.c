@@ -15,6 +15,8 @@
 #include "FTM.h"
 #include "../GPIO/gpio.h"
 #include "../../board.h"
+#include "MK64F12.h"
+#include <stddef.h>
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -43,6 +45,9 @@ static PWM_callback_t PWM_ISR;
 //FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
+
+static void PCR_config(uint32_t port_name, uint32_t pin, uint32_t mux_value);
+static PORT_Type* portPtrs[] = PORT_BASE_PTRS;
 
 
 //////////////////////////////////////////////////////////////////
@@ -77,7 +82,7 @@ void FTM_Init(FTM_t ftm){
 	if(ftm == FTM0){
 		SIM->SCGC6 |= SIM_SCGC6_FTM0_MASK;
 		NVIC_EnableIRQ(FTM0_IRQn);
-		FTM0->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
+		//FTM0->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
 	}
 	else if(ftm == FTM1){
 		SIM->SCGC6 |= SIM_SCGC6_FTM1_MASK;
@@ -96,6 +101,7 @@ void FTM_Init(FTM_t ftm){
 		FTM3->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
 	}
 	//PWM_Init(10000-1,FTM_PSC_x32,70);
+	PCR_config(PC,1,4);
 	PWM_ISR = NULL;
 	return;
 }
@@ -103,6 +109,19 @@ void FTM_Init(FTM_t ftm){
 void FTM_SetISRCallback(PWM_callback_t callback){
 	PWM_ISR=callback;
 	return;
+}
+
+static void PCR_config(uint32_t port_name, uint32_t pin2use, uint32_t mux_value)
+{
+	uint32_t pin = PORTNUM2PIN(port_name,pin2use);
+	PORT_Type *port = portPtrs[PIN2PORT(pin)];
+	uint32_t num = PIN2NUM(pin);
+
+	port->PCR[num] = 0x00; // fuerzo a valer 0 el PCR
+	port->PCR[num] |= PORT_PCR_DSE(0b1);
+	port->PCR[num] |= PORT_PCR_MUX(mux_value); // activo el modo en el que quiero utilizar ese pin
+	port->PCR[num] &= ~PORT_PCR_IRQC_MASK;
+	port->PCR[num] |= PORT_PCR_IRQC(0b0000);
 }
 
 // void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)

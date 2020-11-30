@@ -4,8 +4,7 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#include "fsl_device_registers.h"
-#include ".\Drivers\DMA\DMAPixel.h"
+#include "./Drivers/LED_matrix/LED_matrix.h"
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -44,30 +43,13 @@
 //////////////////////////////////////////////////////////////////
 
 void App_Init (void){
-	initBuffer();
-	DMA_Init();
-	RNG_Init();
+	led_m_init();
+	led_m_set_pixel(1, 255, 2, 2);
 	return;
 }
 
 void App_Run(void){
-	colorWipe(Red,400);//red swipe
-	colorWipe(Black,300);
-	colorWipe(Green,400);//green swipe
-	colorWipe(Black,300);
-	colorWipe(Blue,400);//blue swipe
-	colorWipe(Black,300);
-	colorWipe(Purple,300);//purple
-	colorWipe(Black,300);
-
-	//fadeinout colors
-	FadeInOut(Green);
-	//theaterChase
-	theaterChase(Crimson,1000);
-	//theaterChase(0x00,0x00,0xFF,1000);
-	//Twinkle
-	Twinkle(Yellow,50,800,1,1);
-	randomColors(20);
+	for(;;);
 	return;
 }
 

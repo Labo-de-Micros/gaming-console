@@ -26,27 +26,26 @@ typedef struct
 	uint16_t B[8];
 }GRB_t;
 
-static int8_t ftmid1;
+
 static int8_t timerid;
 static GRB_t led_matrix [CANT_LEDS+CANT_LEDS_ZERO];
 
 static void tim_cb(void)
 {
 	if(led_matrix[0].G[0] == CNV_ON)
-		FTMSetCnV(ftmid1, CNV_ON);
+		FTM_SetCounter (FTM0, 0, CNV_ON);
 	else
-		FTMSetCnV(ftmid1, CNV_OFF);
-
-	FTMStartClock(0);
+		FTM_SetCounter (FTM0, 0, CNV_OFF);
+	FTM_StartClock(FTM0);
 }
 
 static void dma_cb(void)
 {
-	FTMStopClock(0);
-	timerReset(timerid);
+	FTM_StopClock(FTM0);
+	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
 }
 
-static void led_m_set_pixel_brightness(uint16_t *ptr, uint8_t brightness)
+void led_m_set_pixel_brightness(uint16_t *ptr, uint8_t brightness)
 {
 	uint8_t i;
 	for (i = 0; i<8; i++){
@@ -60,13 +59,13 @@ void led_m_set_pixel(uint8_t color, uint8_t brightness, uint8_t row, uint8_t col
 	switch(color)
 	{
 	case GREEN:
-		set_color_brightness(led_matrix[ROW_SIZE*row+col].G, brightness);
+		led_m_set_pixel_brightness(led_matrix[ROW_SIZE*row+col].G, brightness);
 		break;
 	case RED:
-		set_color_brightness(led_matrix[ROW_SIZE*row+col].R, brightness);
+		led_m_set_pixel_brightness(led_matrix[ROW_SIZE*row+col].R, brightness);
 		break;
 	case BLUE:
-		set_color_brightness(led_matrix[ROW_SIZE*row+col].B, brightness);
+		led_m_set_pixel_brightness(led_matrix[ROW_SIZE*row+col].B, brightness);
 		break;
 	default: 
 		break;
@@ -90,7 +89,7 @@ void led_m_init()
 
     config.dma_mux_conf.channel_number=0;
 	config.dma_mux_conf.dma_enable=true;
-	config.dma_mux_conf.trigger_enable=false; // doubt
+	config.dma_mux_conf.trigger_enable=true; // doubt
 	config.dma_mux_conf.source=20;
 
 	/// ============= INIT TCD0 ===================//
@@ -137,8 +136,6 @@ void led_m_init()
 
 	dma_set_config_channel(config);
 
-	dma_change_erq_flag(config.dma_mux_conf.channel_number, true);
-
 	FTM_Init(FTM0);
 	FTM_SetModulus(FTM0,MOD);
 	FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
@@ -146,6 +143,8 @@ void led_m_init()
 	FTM_SetInterruptMode (FTM0, 0, 1);
 	FTM_SetCounter (FTM0,0,CNV_OFF);
 	FTM_SetPSC(FTM0, FTM_PSC_x1);
+	
+	FTM_StartClock(FTM0);
 
 	return;
 }
