@@ -28,7 +28,7 @@
 //============================================
 #if CLOUD==CLOUD_DANY
 
-IPAddress MqttServer(192,168,0,101);				        // MQTT server URL or IP
+IPAddress MqttServer(192,168,0,109);				        // MQTT server URL or IP
 const unsigned int MqttPort=1883; 					        // MQTT port (default 1883)
 const char MqttUser[]="itba.jacoby@gmail.com";		  // user name 
 const char MqttPassword[]="12345678";				        // user password
@@ -275,29 +275,30 @@ void ParseTopic(char* topic, char * payload, unsigned int length)
   {
     //debug_message("%s",payload);
     //parsear por cada boton que hay y despues mandar por uart
+    //los botones distintos al brillo arrancan desde el 110
       if(!strcmp(payload,"rotate"))
       {
-         Serial.write('R');
+         Serial.write(110);
       }
       else if(!strcmp(payload,"push-down"))
       {
-         Serial.write('A');
+         Serial.write(111);
       }
       else if(!strcmp(payload,"move left"))
       {
-         Serial.write('I');
+         Serial.write(112);
       }          
       else if(!strcmp(payload,"move right"))
       {
-         Serial.write('D');
+         Serial.write(113);
       }
       else if(!strcmp(payload,"enter"))
       {
-         Serial.write('E');
+         Serial.write(114);
       }
       else if(!strcmp(payload,"escape"))
       {
-         Serial.write('C');
+         Serial.write(115);
       }
               
   }
