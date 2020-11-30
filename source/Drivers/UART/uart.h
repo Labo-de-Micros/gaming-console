@@ -102,8 +102,8 @@ void upload_word(UART_type_t id,char * word, uint16_t can);
 
 
 
-void download_word(void);
-// se fija si llego un mensaje y lo copia a un arreglo externo al buffer
+void download_word(int len);
+// se fija si llego un mensaje de largo len y lo copia a un arreglo externo al buffer
 /*******************************************************************************
  ******************************************************************************/
 
