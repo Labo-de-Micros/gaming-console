@@ -4,6 +4,14 @@
 #include "../FTM/ftm.h"
 #include "../Timer/timer.h"
 
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
 #define CNV_ON 		39 	//39 ticks -> 0.8us
 #define CNV_OFF 	22 	//22 ticks -> 0.46us
 #define CNV_ZERO 	0
@@ -18,6 +26,12 @@
 #define MAT_SIZE ((CANT_LEDS+CANT_LEDS_ZERO)*8*3*2)+(1*2) //(64 LEDS+10LEDS en zero para reset) * 8BITS * 3 COLORES * 2bytes (CNV son 16 bits)
 #define ROW_SIZE 8
 
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 typedef void (*Led_m_callback_t)(void);
 
 typedef enum {RED, GREEN, BLUE} led_color;
@@ -29,24 +43,31 @@ typedef struct
 	uint16_t B[8];
 }GRB_t;
 
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		             Static function headers 					//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+static uint8_t _ftm_to_source_id(FTM_t ftm, FTMChannel_t channel);
+static void tim_cb(void);
+static void dma_cb(void);
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		                 Static variables   					//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 static int8_t timerid;
 static GRB_t led_matrix [CANT_LEDS+CANT_LEDS_ZERO];
 
-static void tim_cb(void)
-{
-	if(led_matrix[0].G[0] == CNV_ON)
-		FTM_SetCounter (FTM0, 0, CNV_ON);
-	else
-		FTM_SetCounter (FTM0, 0, CNV_OFF);
-	FTM_StartClock(FTM0);
-}
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		                 External functions   					//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
-static void dma_cb(void)
-{
-	FTM_StopClock(FTM0);
-	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
-}
 
 void led_m_set_pixel_brightness(uint16_t *ptr, uint8_t brightness)
 {
@@ -99,7 +120,7 @@ void led_m_init()
 
 		dma_init();
 
-		DMAMUX->CHCFG[DMA_CH] = DMAMUX_CHCFG_ENBL(1) | DMAMUX_CHCFG_TRIG(0) | DMAMUX_CHCFG_SOURCE(_ftm_to_source_id(ftm, FTM_CH));
+		DMAMUX->CHCFG[DMA_CH] = DMAMUX_CHCFG_ENBL(1) | DMAMUX_CHCFG_TRIG(0) | DMAMUX_CHCFG_SOURCE(_ftm_to_source_id(FTM0, FTM_CH));
 
 		NVIC_ClearPendingIRQ(DMA0_IRQn);
 		NVIC_EnableIRQ(DMA0_IRQn);
@@ -114,10 +135,10 @@ void led_m_init()
 
 		_tcd.NBYTES_MLNO = 0x02;
 
-		_tcd.CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(matrix_size/2);	// div 2 //(sizeof(sourceBuffer)/sizeof(sourceBuffer[0]))
-		_tcd.BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(matrix_size/2);  // div 2
+		_tcd.CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(MAT_SIZE/2);	// div 2 //(sizeof(sourceBuffer)/sizeof(sourceBuffer[0]))
+		_tcd.BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(MAT_SIZE/2);  // div 2
 
-		_tcd.SLAST = -matrix_size;
+		_tcd.SLAST = -MAT_SIZE;
 
 		_tcd.DLAST_SGA = 0x00;
 
@@ -175,4 +196,27 @@ void led_m_init()
 		done_already = true;
     }
 	return;
+}
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		                 Static functions   					//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
+static void tim_cb(void)
+{
+	if(led_matrix[0].G[0] == CNV_ON)
+		FTM_SetCounter (FTM0, 0, CNV_ON);
+	else
+		FTM_SetCounter (FTM0, 0, CNV_OFF);
+	FTM_StartClock(FTM0);
+}
+
+static void dma_cb(void)
+{
+	FTM_StopClock(FTM0);
+	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
 }

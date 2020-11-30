@@ -23,7 +23,7 @@
 static void dma_mux_init(dma_mux_conf_t config);
 static void dma_change_erq_flag(int channel_number, bool value);
 static void DMA_IRQHandler(uint8_t channel_number);
-static uint8_t _ftm_to_source_id(FTM_t ftm, FTMChannel_t channel);
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -106,18 +106,6 @@ static void DMA_IRQHandler(uint8_t channel_number)
 	dma->CINT |= DMA_CINT_CINT(channel_number);
     return;
 }
-
-static void dma_mux_init(dma_mux_conf_t config){
-	if(!(config.channel_number >= DMA_AMOUNT_CHANNELS)){
-	    DMAMUX_Type* dma_mux = DMAMUX;
-	    dma_mux->CHCFG[config.channel_number] = 0x00;
-	    dma_mux->CHCFG[config.channel_number] = DMAMUX_CHCFG_ENBL(config.dma_enable) | DMAMUX_CHCFG_SOURCE(config.source);// | DMAMUX_CHCFG_TRIG(config.trigger_enable);
-    }
-    return;
-}
-
-
-
 
 void DMA0_IRQHandler(void)
 {
