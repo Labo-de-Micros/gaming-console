@@ -12,19 +12,22 @@
 //////////////////////////////////////////////////////////////////
 
 
-#define CNV_ON 		39 	//39 ticks -> 0.8us
-#define CNV_OFF 	22 	//22 ticks -> 0.46us
+#define CNV_ON 		39 	// 0.8us
+#define CNV_OFF 	22 	// 0.46us
 #define CNV_ZERO 	0
-#define MOD 		62	//62ticks ->1.26us
+#define MOD 		62	// 1.26us
 
 #define FTM_CH 0
 #define DMA_CH 0
 
-#define CANT_LEDS 64
-#define CANT_LEDS_ZERO 0
-
-#define MAT_SIZE ((CANT_LEDS+CANT_LEDS_ZERO)*8*3*2)+(1*2) //(64 LEDS+10LEDS en zero para reset) * 8BITS * 3 COLORES * 2bytes (CNV son 16 bits)
 #define ROW_SIZE 8
+#define COL_SIZE 8
+
+#define CANT_LEDS ROW_SIZE*COL_SIZE
+
+//							   bits por color / colores / 		CnV			
+#define MAT_SIZE ( CANT_LEDS * sizeof(uint8_t)   * 3 *   sizeof(uint16_t))+(1*2)
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -36,6 +39,17 @@ typedef void (*Led_m_callback_t)(void);
 
 typedef enum {RED, GREEN, BLUE} led_color;
 
+typedef enum {
+	BRIGHT_MAX = 1,
+	BRIGHT_7 = 2,
+	BRIGHT_6 = 4,
+	BRIGHT_5 = 8,
+	BRIGHT_4 = 16,
+	BRIGHT_3 = 32,
+	BRIGHT_2 = 64,
+	BRIGHT_MIN = 128
+}led_m_brightness_t;
+
 typedef struct
 {
 	uint16_t G[8]; 
@@ -43,15 +57,23 @@ typedef struct
 	uint16_t B[8];
 }GRB_t;
 
+typedef struct
+{
+	uint8_t G; 
+	uint8_t R;
+	uint8_t B;
+}led_m_color_t;
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //		             Static function headers 					//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
+static void led_m_set_pixel_cnv(uint16_t *ptr, uint8_t brightness);
 static uint8_t ftm_to_source_id(FTM_t ftm, FTMChannel_t channel);
-static void tim_cb(void);
-static void dma_cb(void);
+static void restart_cb(void);
+static void end_of_major_cb(void);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -60,7 +82,21 @@ static void dma_cb(void);
 //////////////////////////////////////////////////////////////////
 
 static int8_t timerid;
-static GRB_t led_matrix [CANT_LEDS+CANT_LEDS_ZERO];
+static led_m_brightness_t led_m_brightness;
+static GRB_t led_matrix [CANT_LEDS];
+static led_m_color_t color_matrix [CANT_LEDS];
+
+static led_m_color_t
+White = {255,255,255},
+Black = {0,0,0},
+Red = {255,0,0},
+Green = {0,255,0},
+Blue = {0,0,255},
+Brown = {0x1b,0x3c,0},
+Gray = {192,192,192},
+Yellow = {255,255,0},
+Crimson = {80,0,0},
+Purple = {153,0,255};
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -68,32 +104,40 @@ static GRB_t led_matrix [CANT_LEDS+CANT_LEDS_ZERO];
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-
-void led_m_set_pixel_brightness(uint16_t *ptr, uint8_t brightness)
+void led_m_set_pixel_color_rgb(uint8_t r, uint8_t g, uint8_t b, uint8_t row, uint8_t col)
 {
-	uint8_t i;
-	for (i = 0; i<8; i++){
-		ptr[i] = (brightness & (1<<i)) ? CNV_ON : CNV_OFF;
-	}
+	led_m_color_t color={r, g, b};
+	led_m_set_pixel_color(color, row, col);
+	
 	return;
 }
 
-void led_m_set_pixel(uint8_t color, uint8_t brightness, uint8_t row, uint8_t col)
+void led_m_set_pixel_color(led_m_color_t color, uint8_t row, uint8_t col)
 {
-	switch(color)
-	{
-	case GREEN:
-		led_m_set_pixel_brightness(led_matrix[ROW_SIZE*row+col].G, brightness);
-		break;
-	case RED:
-		led_m_set_pixel_brightness(led_matrix[ROW_SIZE*row+col].R, brightness);
-		break;
-	case BLUE:
-		led_m_set_pixel_brightness(led_matrix[ROW_SIZE*row+col].B, brightness);
-		break;
-	default: 
-		break;
-	}
+	color_matrix[ROW_SIZE*row+col]=color;
+
+	led_m_set_pixel_cnv(led_matrix[ROW_SIZE*row+col].R, color.R/led_m_brightness);
+		
+	led_m_set_pixel_cnv(led_matrix[ROW_SIZE*row+col].G, color.G/led_m_brightness);
+		
+	led_m_set_pixel_cnv(led_matrix[ROW_SIZE*row+col].B, color.B/led_m_brightness);
+
+	return;
+}
+
+void led_m_set_brightness(led_m_brightness_t brightness)
+{
+	led_m_brightness=brightness;
+
+	return;
+}
+
+void led_m_set_all_to_color(led_m_color_t color)
+{
+	for (int col = 1; col < ROW_SIZE; col++)
+        for (int row = 1; row < COL_SIZE; row++)
+			led_m_set_pixel_color(color, row, col);
+
 	return;
 }
 
@@ -104,17 +148,8 @@ void led_m_init()
 	
 	if(!done_already){
 
-		uint8_t i;
-
-		for(i = 0; i < CANT_LEDS+CANT_LEDS_ZERO; i++)
-		{
-			if(i < CANT_LEDS)
-			{
-				led_m_set_pixel_brightness(led_matrix[i].R, 255);
-				led_m_set_pixel_brightness(led_matrix[i].G, 255);
-				led_m_set_pixel_brightness(led_matrix[i].B, 255);
-			}
-		}
+		led_m_brightness=BRIGHT_5;
+		led_m_set_all_to_color(Yellow);
 
 		// DMA config
 
@@ -135,8 +170,8 @@ void led_m_init()
 
 		_tcd.NBYTES_MLNO = 0x02;
 
-		_tcd.CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(MAT_SIZE/2);	// div 2 //(sizeof(sourceBuffer)/sizeof(sourceBuffer[0]))
-		_tcd.BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(MAT_SIZE/2);  // div 2
+		_tcd.CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(MAT_SIZE/2);	
+		_tcd.BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(MAT_SIZE/2);
 
 		_tcd.SLAST = -MAT_SIZE;
 
@@ -148,17 +183,13 @@ void led_m_init()
 
 		DMA0->ERQ = DMA_ERQ_ERQ0_MASK;
 
-		dma_assoc_callback_to_channel(DMA_CH, dma_cb);
+		dma_assoc_callback_to_channel(DMA_CH, end_of_major_cb);
 
-		led_m_set_pixel_brightness(led_matrix[1].R, 255);
-		led_m_set_pixel_brightness(led_matrix[1].G, 255);
-		led_m_set_pixel_brightness(led_matrix[1].B, 255);
+		// Timer config
 
 		timerInit();
 		timerid = timerGetId();
-		timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
-		timerStop(timerid);
-
+		
 		// Port config
 
 		SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK;
@@ -193,11 +224,15 @@ void led_m_init()
 
 		FTM_StartClock(FTM0);
 		
+		led_m_set_pixel_brightness(led_matrix[1].R, 255);
+		led_m_set_pixel_brightness(led_matrix[1].G, 255);
+		led_m_set_pixel_brightness(led_matrix[1].B, 255);
+		
 		done_already = true;
     }
+
 	return;
 }
-
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -205,20 +240,35 @@ void led_m_init()
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
+static void led_m_set_pixel_cnv(uint16_t *ptr, uint8_t brightness)
+{
+	uint8_t index;
+	
+	for (index = 0; index<8; index++)
+		ptr[index] = (brightness & (1<<index)) ? CNV_ON : CNV_OFF;
+	
+	return;
+}
 
-static void tim_cb(void)
+static void restart_cb(void)
 {
 	if(led_matrix[0].G[0] == CNV_ON)
 		FTM_SetCounter (FTM0, 0, CNV_ON);
 	else
 		FTM_SetCounter (FTM0, 0, CNV_OFF);
+	
 	FTM_StartClock(FTM0);
+
+	return;
 }
 
-static void dma_cb(void)
+static void end_of_major_cb(void)
 {
 	FTM_StopClock(FTM0);
-	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
+
+	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, restart_cb);
+
+	return;
 }
 
 static uint8_t ftm_to_source_id(FTM_t ftm, FTMChannel_t channel)
