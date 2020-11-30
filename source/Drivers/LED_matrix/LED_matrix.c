@@ -1,13 +1,16 @@
 #include "LED_matrix.h"
-
+#include "MK64F12.h"
 #include "../DMA/dma.h"
 #include "../FTM/ftm.h"
 #include "../Timer/timer.h"
 
-#define CNV_ON 		39 //39 ticks -> 0.8us
-#define CNV_OFF 	22 //22 ticks -> 0.46us
-#define CNV_ZERO 0
-#define MOD 62//62ticks ->1.26us
+#define CNV_ON 		39 	//39 ticks -> 0.8us
+#define CNV_OFF 	22 	//22 ticks -> 0.46us
+#define CNV_ZERO 	0
+#define MOD 		62	//62ticks ->1.26us
+
+#define FTM_CH 0
+#define DMA_CH 0
 
 #define CANT_LEDS 64
 #define CANT_LEDS_ZERO 0
@@ -21,7 +24,7 @@ typedef enum {RED, GREEN, BLUE} led_color;
 
 typedef struct
 {
-	uint16_t G[8]; //Un array de 8 elementos de 16 bits.
+	uint16_t G[8]; 
 	uint16_t R[8];
 	uint16_t B[8];
 }GRB_t;
@@ -75,92 +78,101 @@ void led_m_set_pixel(uint8_t color, uint8_t brightness, uint8_t row, uint8_t col
 
 void led_m_init()
 {
-	uint16_t* matrix_ptr=(uint16_t*)(&led_matrix);
-	uint32_t matrix_size=MAT_SIZE;
-	Led_m_callback_t _callback=dma_cb;
-
-    dma_init();
-    dma_conf_t config;
-    
-    for(uint16_t i = 0; i < CANT_LEDS+CANT_LEDS_ZERO; i++)
-    {
-    		if(i < CANT_LEDS)
-    		{
-    			led_m_set_pixel_brightness(led_matrix[i].R, 255);
-    			led_m_set_pixel_brightness(led_matrix[i].G, 255);
-    			led_m_set_pixel_brightness(led_matrix[i].B, 255);
-    		}
-    }
-
-    led_m_set_pixel_brightness(led_matrix[1].R, 255);
-    led_m_set_pixel_brightness(led_matrix[1].G, 255);
-    led_m_set_pixel_brightness(led_matrix[1].B, 255);
-
-	timerInit();
-	timerid = timerGetId();
-	timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
-	timerStop(timerid);
-
-    config.dma_mux_conf.channel_number=0;
-	config.dma_mux_conf.dma_enable=true;
-	config.dma_mux_conf.trigger_enable=true; // doubt
-	config.dma_mux_conf.source=20;
-
-	/// ============= INIT TCD0 ===================//
-	/* Set memory address for source and destination. */
-	config.source_address = (uint32_t)(matrix_ptr);				   //List of Duties
-
-	//DMA_TCD0_DADDR = (uint32_t)(destinationBuffer);
-	config.destination_address = (uint32_t)(&(FTM0->CONTROLS[0].CnV));  // To change FTM Duty
-
-    /* Set an offset for source and destination address. */
-	config.source_offset =0x02; // Source address offset of 2 bytes per transaction.
-	config.destination_offset =0x00; // Destination address offset is 0. (Siempre al mismo lugar)
-
-	/* Set source and destination data transfer size to 16 bits (CnV is 2 bytes wide). */
-	config.source_data_transfer_size=1;
-    config.destination_data_transfer_size=1;
-
-	/*Number of bytes to be transfered in each service request of the channel.*/
-	config.nbytes = 0x02;
-
-	/* Current major iteration count (5 iteration of 1 byte each one). */
-
-	//DMA_TCD0_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(0x05);
-	//DMA_TCD0_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(0x05);
-
-	/* Autosize for Current major iteration count */
-
-	config.citer=matrix_size/2;	// div 2 //(sizeof(sourceBuffer)/sizeof(sourceBuffer[0]))
+	static bool done_already = false;
+	dma_TCD_t _tcd;
 	
-	//DMA_TCD0_SLAST = 0x00;
-	//DMA_TCD0_SLAST = -5*sizeof(uint16_t);
-	//DMA_TCD0_SLAST = -((sizeof(sourceBuffer)/sizeof(sourceBuffer[0])*sizeof(uint16_t)));
+	if(!done_already){
 
-	/* Autosize SLAST for Wrap Around. This value is added to SADD at the end of Major Loop */
-	config.source_address_adjustment = -matrix_size;
+		uint8_t i;
 
-	/* DLASTSGA DLAST Scatter and Gatter */
-	config.destination_address_adjustment = 0x00;
+		for(i = 0; i < CANT_LEDS+CANT_LEDS_ZERO; i++)
+		{
+			if(i < CANT_LEDS)
+			{
+				led_m_set_pixel_brightness(led_matrix[i].R, 255);
+				led_m_set_pixel_brightness(led_matrix[i].G, 255);
+				led_m_set_pixel_brightness(led_matrix[i].B, 255);
+			}
+		}
 
-	/* Setup control and status register. */
-	config.major_loop_int_enable=true;	//Enable Major Interrupt.
+		// DMA config
 
-    config.callback=_callback;
+		dma_init();
 
-	dma_set_config_channel(config);
-	dma0_enable_erq();
+		DMAMUX->CHCFG[DMA_CH] = DMAMUX_CHCFG_ENBL(1) | DMAMUX_CHCFG_TRIG(0) | DMAMUX_CHCFG_SOURCE(_ftm_to_source_id(ftm, FTM_CH));
 
-	FTM_Init(FTM0);
-	FTM_SetModulus(FTM0,MOD);
-	FTM_SetDMA(FTM0, 0, 1);
-	FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
-	FTM_SetPulseWidthModulationLogic(FTM0,0,FTM_lAssertedHigh);
-	FTM_SetInterruptMode (FTM0, 0, 1);
-	FTM_SetCounter (FTM0,0,CNV_OFF);
-	FTM_SetPSC(FTM0, FTM_PSC_x1);
+		NVIC_ClearPendingIRQ(DMA0_IRQn);
+		NVIC_EnableIRQ(DMA0_IRQn);
 
-	FTM_StartClock(FTM0);
+		_tcd.SADDR = (uint32_t)((uint16_t*)(&led_matrix));
+		_tcd.DADDR = (uint32_t)(&(FTM0->CONTROLS[FTM_CH].CnV));
 
+		_tcd.SOFF =0x02;
+		_tcd.DOFF =0x00;
+
+		_tcd.ATTR = DMA_ATTR_SSIZE(1) | DMA_ATTR_DSIZE(1);
+
+		_tcd.NBYTES_MLNO = 0x02;
+
+		_tcd.CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(matrix_size/2);	// div 2 //(sizeof(sourceBuffer)/sizeof(sourceBuffer[0]))
+		_tcd.BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(matrix_size/2);  // div 2
+
+		_tcd.SLAST = -matrix_size;
+
+		_tcd.DLAST_SGA = 0x00;
+
+		_tcd.CSR = DMA_CSR_INTMAJOR_MASK;
+
+		dma_push_TCD_to_channel(DMA_CH, _tcd);
+
+		DMA0->ERQ = DMA_ERQ_ERQ0_MASK;
+
+		dma_assoc_callback_to_channel(DMA_CH, dma_cb);
+
+
+		led_m_set_pixel_brightness(led_matrix[1].R, 255);
+		led_m_set_pixel_brightness(led_matrix[1].G, 255);
+		led_m_set_pixel_brightness(led_matrix[1].B, 255);
+
+		timerInit();
+		timerid = timerGetId();
+		timerStart(timerid, 2, TIM_MODE_SINGLESHOT, tim_cb);
+		timerStop(timerid);
+
+		// Port config
+
+		SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK;
+		SIM->SCGC5 |= SIM_SCGC5_PORTB_MASK;
+		SIM->SCGC5 |= SIM_SCGC5_PORTC_MASK;
+		SIM->SCGC5 |= SIM_SCGC5_PORTD_MASK;
+		SIM->SCGC5 |= SIM_SCGC5_PORTE_MASK;
+	
+		PORT_ClearPortFlags(PORTA);
+		PORT_ClearPortFlags(PORTB);
+		PORT_ClearPortFlags(PORTC);
+		PORT_ClearPortFlags(PORTD);
+		PORT_ClearPortFlags(PORTE);
+	
+		NVIC_EnableIRQ(PORTA_IRQn);
+		NVIC_EnableIRQ(PORTB_IRQn);
+		NVIC_EnableIRQ(PORTC_IRQn);
+		NVIC_EnableIRQ(PORTD_IRQn);
+		NVIC_EnableIRQ(PORTE_IRQn);
+		
+		// FTM config
+
+		FTM_Init(FTM0);
+		FTM_SetModulus(FTM0,MOD);
+		FTM_SetDMA(FTM0, 0, 1);
+		FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
+		FTM_SetPulseWidthModulationLogic(FTM0,0,FTM_lAssertedHigh);
+		FTM_SetInterruptMode (FTM0, 0, 1);
+		FTM_SetCounter (FTM0,0,CNV_OFF);
+		FTM_SetPSC(FTM0, FTM_PSC_x1);
+
+		FTM_StartClock(FTM0);
+		
+		done_already = true;
+    }
 	return;
 }
