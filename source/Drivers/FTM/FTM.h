@@ -144,7 +144,7 @@ void 		FTM_ClearInterruptFlag 			 (FTM_t, FTMChannel_t);
 
 void 		FTM_SetISRCallback				 (PWM_callback_t callback);
 void 		FTM_SetPSC						 (FTM_t ftm, uint16_t PSC);
-
+void 		FTM_SetDMA						 (FTM_t ftm, FTMChannel_t channel, bool mode);
 //void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent);
 //set the PWM duty_cicly percentage
 

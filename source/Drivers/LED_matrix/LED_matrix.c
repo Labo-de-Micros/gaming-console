@@ -141,10 +141,11 @@ void led_m_init()
 
 	FTM_Init(FTM0);
 	FTM_SetModulus(FTM0,MOD);
+	FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
 	FTM_SetPulseWidthModulationLogic(FTM0,0,FTM_lAssertedHigh);
+	FTM_SetInterruptMode (FTM0, 0, 1);
 	FTM_SetCounter (FTM0,0,CNV_OFF);
-	void FTM_SetWorkingMode (FTM0, 0, FTM_mPulseWidthModulation);
-	void FTM_SetPSC(FTM0, FTM_PSC_x1);
+	FTM_SetPSC(FTM0, FTM_PSC_x1);
 
 	return;
 }
