@@ -104,7 +104,7 @@ void FTM_Init(FTM_t ftm){
 		NVIC_EnableIRQ(FTM3_IRQn);
 		FTM3->PWMLOAD = FTM_PWMLOAD_LDOK_MASK | 0x0F;
 	}
-	//PWM_Init(10000-1,FTM_PSC_x32,70);
+	
 	PCR_config(PC,1,4);
 	PWM_ISR = NULL;
 	return;

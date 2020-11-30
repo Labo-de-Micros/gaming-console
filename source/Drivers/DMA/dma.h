@@ -12,41 +12,30 @@
 
 typedef void (* dma_callback_t)(void);
 
-typedef enum{DMA_8BIT = 0x00, DMA_16BIT = 0x01, DMA_32BIT = 0x02, DMA_16BYTE_BURST = 0x4, DMA_32BYTE_BURST = 0x05} dma_transfer_size_t;
+typedef struct {
+  uint32_t SADDR;                               /**< TCD Source Address, array offset: 0x1000, array step: 0x20 */
+  uint16_t SOFF;                                /**< TCD Signed Source Address Offset, array offset: 0x1004, array step: 0x20 */
+  uint16_t ATTR;                                /**< TCD Transfer Attributes, array offset: 0x1006, array step: 0x20 */
+  union {                                       
+    uint32_t NBYTES_MLNO;                       /**< TCD Minor Byte Count (Minor Loop Disabled), array offset: 0x1008, array step: 0x20 */
+    uint32_t NBYTES_MLOFFNO;                    /**< TCD Signed Minor Loop Offset (Minor Loop Enabled and Offset Disabled), array offset: 0x1008, array step: 0x20 */
+    uint32_t NBYTES_MLOFFYES;                   /**< TCD Signed Minor Loop Offset (Minor Loop and Offset Enabled), array offset: 0x1008, array step: 0x20 */
+  };
+  uint32_t SLAST;                               /**< TCD Last Source Address Adjustment, array offset: 0x100C, array step: 0x20 */
+  uint32_t DADDR;                               /**< TCD Destination Address, array offset: 0x1010, array step: 0x20 */
+  uint16_t DOFF;                                /**< TCD Signed Destination Address Offset, array offset: 0x1014, array step: 0x20 */
+  union {                                       
+    uint16_t CITER_ELINKNO;                     /**< TCD Current Minor Loop Link, Major Loop Count (Channel Linking Disabled), array offset: 0x1016, array step: 0x20 */
+    uint16_t CITER_ELINKYES;                    /**< TCD Current Minor Loop Link, Major Loop Count (Channel Linking Enabled), array offset: 0x1016, array step: 0x20 */
+  };
+  uint32_t DLAST_SGA;                           /**< TCD Last Destination Address Adjustment/Scatter Gather Address, array offset: 0x1018, array step: 0x20 */
+  uint16_t CSR;                                 /**< TCD Control and Status, array offset: 0x101C, array step: 0x20 */
+  union {                                       
+    uint16_t BITER_ELINKNO;                     /**< TCD Beginning Minor Loop Link, Major Loop Count (Channel Linking Disabled), array offset: 0x101E, array step: 0x20 */
+    uint16_t BITER_ELINKYES;                    /**< TCD Beginning Minor Loop Link, Major Loop Count (Channel Linking Enabled), array offset: 0x101E, array step: 0x20 */
+  };
+}dma_TCD_t;
 
-typedef enum {DMA_FTM_} dma_sources_t;
-
-typedef struct{
-	uint8_t channel_number;
-	bool dma_enable;
-	bool trigger_enable;
-	uint8_t source;
-}dma_mux_conf_t;
-
-typedef struct{
-	dma_mux_conf_t dma_mux_conf;
-	uint32_t source_address;
-	uint32_t destination_address;
-	int16_t source_offset;
-	int16_t destination_offset;
-	dma_transfer_size_t destination_data_transfer_size;
-	dma_transfer_size_t	source_data_transfer_size;
-	uint32_t nbytes;
-	uint8_t citer;
-	int32_t source_address_adjustment;
-	int32_t destination_address_adjustment;
-	uint8_t smod;
-	uint8_t dmod;
-	bool major_loop_int_enable;
-	dma_callback_t callback;
-}dma_conf_t;
-
-typedef struct{
-	uint8_t bandwidth_control;
-	bool channel_to_channel_linking;
-	bool enable_scatter_gather;
-	bool enable_request;
-}dma_control_and_status_conf_t;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -55,7 +44,8 @@ typedef struct{
 //////////////////////////////////////////////////////////////////
 
 void dma_init();
-void dma_set_config_channel(dma_conf_t config);
+void dma_push_TCD_to_channel(uint8_t channel, dma_TCD_t tcd);
+void dma_assoc_callback_to_channel(uint8_t channel, dma_callback_t callback);
 bool dma_get_finished_transfer(int channel);
 void dma_enable_major_loop_irq(uint8_t channel_number, bool ie);
 void dma0_enable_erq();
