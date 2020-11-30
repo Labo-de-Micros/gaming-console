@@ -39,16 +39,6 @@ typedef void (*Led_m_callback_t)(void);
 
 typedef enum {RED, GREEN, BLUE} led_color;
 
-typedef enum {
-	BRIGHT_MAX = 1,
-	BRIGHT_7 = 2,
-	BRIGHT_6 = 4,
-	BRIGHT_5 = 8,
-	BRIGHT_4 = 16,
-	BRIGHT_3 = 32,
-	BRIGHT_2 = 64,
-	BRIGHT_MIN = 128
-}led_m_brightness_t;
 
 typedef struct
 {
@@ -57,12 +47,7 @@ typedef struct
 	uint16_t B[8];
 }GRB_t;
 
-typedef struct
-{
-	uint8_t G; 
-	uint8_t R;
-	uint8_t B;
-}led_m_color_t;
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
