@@ -22,6 +22,7 @@
 
 #define UART_CANT_IDS   1
 #define __CORE_CLOCK__ 	100000000U
+#define BUFFER_SIZE 100
 
 /*******************************************************************************
  * ENUMERATIONS AND STRUCTURES AND TYPEDEFS
@@ -102,9 +103,11 @@ void upload_word(UART_type_t id,char * word, uint16_t can);
 
 
 
-void download_word(int len);
+bool download_word(int len);
 // se fija si llego un mensaje de largo len y lo copia a un arreglo externo al buffer
 /*******************************************************************************
  ******************************************************************************/
+
+char * get_word_down_ptr(void);
 
 #endif // _UART_H_

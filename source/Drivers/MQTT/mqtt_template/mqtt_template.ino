@@ -28,7 +28,7 @@
 //============================================
 #if CLOUD==CLOUD_DANY
 
-IPAddress MqttServer(192,168,0,101);				        // MQTT server URL or IP
+IPAddress MqttServer(192,168,0,109);				        // MQTT server URL or IP
 const unsigned int MqttPort=1883; 					        // MQTT port (default 1883)
 const char MqttUser[]="itba.jacoby@gmail.com";		  // user name 
 const char MqttPassword[]="12345678";				        // user password

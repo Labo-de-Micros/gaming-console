@@ -16,8 +16,6 @@ static uint8_t rx_data;
 
 
 //IRQ_RX_HANDLER
-
-#define BUFFER_SIZE 100
 #define TERMINADOR	'\0'
 
 
@@ -34,6 +32,7 @@ static 	uint16_t last_2_send=0;			//puntero a la cola del buffer para enviar
 
 static bool rx_flag=false;
 char word_down[BUFFER_SIZE];
+
 
 //PCR congfig
 
@@ -232,10 +231,10 @@ void upload_word(UART_type_t id,char * word, uint16_t can){
 
 }
 
-void download_word(int len){
+bool download_word(int len){
 
 	uint8_t i = 0;
-
+	uint8_t temp = false;
 	if(rx_flag){
 
 		while(( first_recived != last_recived) && (i < len)) 	//hasta que igualo los punteros o hasta la cantidad de palabras deseadas
@@ -247,7 +246,12 @@ void download_word(int len){
 
 		//upload_word(UART_3,word_down,i); esto es solo si queres transmitir lo que queres enviar
 		rx_flag=false;
+		temp = true;
 	}
-
-
+	return temp;
 }
+
+char * get_word_down_ptr(void){
+	return &word_down;
+}
+
